@@ -1,0 +1,17 @@
+{
+  "name": "300-Day UPSC Prep Ledger",
+  "short_name": "UPSC Ledger",
+  "description": "Daily study tracker for UPSC Civil Services preparation — GS + optional, timers, spaced revision, and progress charts.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#12172B",
+  "theme_color": "#12172B",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
