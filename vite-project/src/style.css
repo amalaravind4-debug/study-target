@@ -1,0 +1,1411 @@
+
+  :root{
+    --bg:#12172B;
+    --surface:#1B2340;
+    --surface2:#232C4F;
+    --line:#323C66;
+    --text:#EDEAE0;
+    --muted:#9BA3C4;
+    --gold:#C9A227;
+    --sage:#4FA893;
+    --alert:#E4573D;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Fraunces', serif; font-weight:600; margin:0;}
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  .wrap{max-width:900px; margin:0 auto; padding:14px 14px 60px;}
+
+  /* header */
+  header.top{display:flex; align-items:center; justify-content:space-between; padding:10px 2px 16px; border-bottom:1px solid var(--line); margin-bottom:16px;}
+  .brand{display:flex; flex-direction:column; gap:2px;}
+  .brand .eyebrow{font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:.14em; color:var(--gold); text-transform:uppercase;}
+  .brand h1{font-size:20px; line-height:1.1;}
+  .top-actions{display:flex; gap:8px; align-items:center;}
+  button{
+    font-family:'IBM Plex Sans', sans-serif;
+    cursor:pointer;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--surface2);
+    color:var(--text);
+    padding:8px 12px;
+    font-size:13px;
+    transition:background .15s ease, border-color .15s ease, transform .1s ease;
+  }
+  button:hover{border-color:var(--gold);}
+  button:active{transform:scale(.97);}
+  button.primary{background:var(--gold); color:#1B1706; border-color:var(--gold); font-weight:600;}
+  button.ghost{background:transparent;}
+  button.icon{padding:8px 10px; font-size:16px; line-height:1;}
+  button:disabled{opacity:.35; cursor:not-allowed;}
+
+  .profile-switch{display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden;}
+  .profile-switch button{border:none; border-radius:0; background:var(--surface2); font-size:12px; padding:8px 10px;}
+  .profile-switch button.active{background:var(--gold); color:#1B1706; font-weight:600;}
+
+  /* day nav */
+  .daynav{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px;}
+  .daynav .center{text-align:center; flex:1;}
+  .daynav .daynum{font-family:'Fraunces', serif; font-size:30px; line-height:1;}
+  .daynav .phase{font-size:12px; color:var(--muted); margin-top:2px;}
+  .daynav .datestr{font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); margin-top:4px;}
+
+  /* spine */
+  .spine-wrap{margin:14px 0 22px; overflow-x:auto; padding-bottom:6px;}
+  .spine{display:flex; gap:2px; width:max-content;}
+  .tick{width:5px; height:22px; border-radius:2px; background:var(--line); opacity:.55; cursor:pointer; flex:none;}
+  .tick.done{opacity:1;}
+  .tick.current{outline:2px solid var(--text); outline-offset:1px; opacity:1;}
+
+  .progressbar{height:6px; border-radius:3px; background:var(--surface2); overflow:hidden; margin-bottom:18px;}
+  .progressbar > div{height:100%; background:linear-gradient(90deg, var(--gold), var(--sage));}
+
+  /* cards */
+  .grid{display:grid; grid-template-columns:1fr; gap:12px;}
+  @media(min-width:640px){ .grid{grid-template-columns:1fr 1fr;} }
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:8px;}
+  .card.flash{animation:flash 1s ease-in-out 3;}
+  @keyframes flash{0%,100%{border-color:var(--line); box-shadow:none;} 50%{border-color:var(--alert); box-shadow:0 0 0 3px rgba(228,87,61,.25);}}
+  .card .label{font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--gold);}
+  .card h3{font-size:16px; margin-bottom:2px;}
+  .card .topic{font-size:14px; color:var(--text); line-height:1.45;}
+  .card .meta{font-size:11px; color:var(--muted);}
+  .card .row{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding-top:8px; border-top:1px dashed var(--line);}
+  .timer{font-family:'IBM Plex Mono', monospace; font-size:20px;}
+  .timer.done{color:var(--alert);}
+  .rev-item{font-size:13px; padding:6px 0; border-bottom:1px solid var(--line);}
+  .rev-item:last-child{border-bottom:none;}
+  .rev-item .when{font-family:'IBM Plex Mono', monospace; font-size:10px; color:var(--sage); margin-right:6px;}
+  label.check{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); cursor:pointer;}
+  label.check input{accent-color:var(--gold);}
+
+  /* modal */
+  .overlay{position:fixed; inset:0; background:rgba(9,12,26,.75); display:flex; align-items:flex-end; justify-content:center; z-index:50;}
+  @media(min-width:640px){ .overlay{align-items:center;} }
+  .modal{background:var(--surface); border:1px solid var(--line); border-radius:16px 16px 0 0; padding:20px; width:100%; max-width:480px; max-height:88vh; overflow-y:auto;}
+  @media(min-width:640px){ .modal{border-radius:16px;} }
+  .modal h2{font-size:18px; margin-bottom:14px;}
+  .field{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;}
+  .field label{font-size:13px; color:var(--muted);}
+  .field input[type=number], .field input[type=date]{
+    background:var(--surface2); border:1px solid var(--line); color:var(--text);
+    border-radius:8px; padding:8px 10px; font-family:'IBM Plex Mono', monospace; width:110px; font-size:13px;
+  }
+  .modal .close-row{display:flex; justify-content:flex-end; gap:8px; margin-top:16px;}
+
+  .banner{position:fixed; top:14px; left:50%; transform:translateX(-50%); background:var(--gold); color:#1B1706; padding:12px 18px; border-radius:10px; font-weight:600; font-size:14px; z-index:60; box-shadow:0 8px 24px rgba(0,0,0,.35);}
+
+  .note{font-size:11px; color:var(--muted); margin-top:24px; line-height:1.5; border-top:1px solid var(--line); padding-top:14px;}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+/* ============== STORAGE COMPATIBILITY SHIM ==============
+   window.storage is provided natively inside Claude.ai's artifact preview.
+   Outside that environment (e.g. deployed on Vercel), it doesn't exist —
+   so this polyfills the same get/set/delete/list interface using the
+   browser's own localStorage. Nothing else in this file needs to change
+   for either environment. */
+if(typeof window.storage === 'undefined'){
+  window.storage = {
+    async get(key){
+      try{
+        const v = localStorage.getItem('upsc:'+key);
+        return v===null ? null : {key, value:v, shared:false};
+      }catch(e){ return null; }
+    },
+    async set(key, value){
+      try{
+        localStorage.setItem('upsc:'+key, value);
+        return {key, value, shared:false};
+      }catch(e){ return null; }
+    },
+    async delete(key){
+      try{ localStorage.removeItem('upsc:'+key); return {key, deleted:true, shared:false}; }
+      catch(e){ return null; }
+    },
+    async list(prefix){
+      try{
+        const p = 'upsc:'+(prefix||'');
+        const keys = Object.keys(localStorage).filter(k=>k.startsWith(p)).map(k=>k.slice(5));
+        return {keys, prefix, shared:false};
+      }catch(e){ return null; }
+    }
+  };
+}
+
+/* ============== CURRICULUM DATA ============== */
+
+const SUBJECTS = {
+  polity: { label:"Polity — Laxmikanth", color:"#C9A227", topics:[
+    "Historical Background of the Constitution, Making of the Constitution, Salient Features",
+    "Preamble, Union & its Territory, Citizenship",
+    "Fundamental Rights",
+    "Directive Principles of State Policy, Fundamental Duties",
+    "Amendment of the Constitution, Basic Structure Doctrine",
+    "Parliamentary System, Federal System",
+    "Centre-State Relations, Inter-State Relations",
+    "Emergency Provisions",
+    "President, Vice-President",
+    "Prime Minister, Central Council of Ministers, Cabinet Committees",
+    "Parliament — Lok Sabha, Rajya Sabha, Parliamentary Committees",
+    "Supreme Court, Judicial Review, Judicial Activism",
+    "Governor, State Executive (CM & Council of Ministers), State Legislature, High Court",
+    "Local Government — Panchayati Raj & Municipalities, Union Territories, Special Provisions for States",
+    "Constitutional Bodies (Election Commission, UPSC/SPSC, Finance Commission, CAG, AG) & Non-Constitutional Bodies (NITI Aayog, CVC, CBI, Lokpal/Lokayukta)",
+    "Political Parties, Pressure Groups, Electoral Reforms, Recent Amendments — full revision"
+  ]},
+  geography: { label:"Geography — NCERT + GC Leong", color:"#4FA893", topics:[
+    "NCERT Class 6 — Geography basics, the Globe, Motions of the Earth",
+    "NCERT Class 6 (contd.) — Interior of the Earth, Rocks, Landforms",
+    "NCERT Class 7 — Environment, Climate, Natural Vegetation & Wildlife",
+    "NCERT Class 9 — India: Physical Features, Drainage Systems",
+    "NCERT Class 9 — India: Climate, Natural Vegetation, Wildlife",
+    "NCERT Class 9/10 — Population, Economic Geography basics",
+    "NCERT Class 11 — Geomorphology (Earth's interior, landforms)",
+    "NCERT Class 11 — Climatology (atmosphere, insolation, pressure & winds)",
+    "NCERT Class 11 — Oceanography (currents, tides, temperature/salinity) & Biogeography",
+    "NCERT Class 11 — India: Physiography, Drainage, Climate, Soils, Vegetation",
+    "GC Leong — Weather elements: atmosphere structure, insolation, temperature, pressure belts, winds",
+    "GC Leong — Humidity, precipitation, air masses, fronts, cyclones, world climate types (Koppen)",
+    "GC Leong — Landforms: weathering, geomorphic processes, river/karst/glacial/arid landforms",
+    "GC Leong — Oceans (relief, temperature, salinity, movements), Natural vegetation & soils",
+    "Economic Geography basics (NCERT Class 12) + Map-work practice + Full revision"
+  ]},
+  economy: { label:"Economy — Vivek Singh", color:"#7C9CBF", topics:[
+    "Basics of Economy, National Income Accounting (GDP, GNP, NNP, NDP)",
+    "Economic Growth & Development, Planning in India (Five Year Plans, NITI Aayog)",
+    "Money & Banking — RBI functions, Monetary Policy",
+    "Banking system — Commercial banks, Financial Inclusion, NBFCs",
+    "Inflation — types, causes, measures, WPI/CPI",
+    "Public Finance — Budget, Fiscal Policy, Deficits, FRBM Act",
+    "Taxation — Direct/Indirect Taxes, GST",
+    "External Sector — Balance of Payments, Foreign Trade, Exchange Rate",
+    "Agriculture — Cropping pattern, Green Revolution, MSP, Agricultural Marketing (APMC, e-NAM)",
+    "Agriculture (contd.) — Food Security, PDS, Land Reforms, Subsidies",
+    "Industry & Infrastructure — Industrial Policy, MSMEs, Infrastructure sectors",
+    "Industry (contd.) — Industrial Licensing, Disinvestment, PSUs",
+    "Services Sector, Employment & Unemployment, Poverty & Inequality",
+    "International Economic Organizations (WTO, IMF, World Bank), Economic Reforms of 1991, Sustainable Development",
+    "Capital Market (SEBI, stock markets), Insurance sector, Miscellaneous topics — full revision"
+  ]},
+  modernHistory: { label:"Modern History — Spectrum", color:"#B5654A", topics:[
+    "Advent of Europeans, Carnatic Wars, Expansion of British Power in Bengal (Plassey, Buxar)",
+    "British Expansion — Mysore Wars, Anglo-Maratha Wars, Anglo-Sikh Wars",
+    "Administrative Structure — Company rule, Regulating Act to Charter Acts, Governor-Generals",
+    "Economic Impact of British Rule — Land Revenue Systems (Permanent, Ryotwari, Mahalwari), De-industrialization, Drain of Wealth",
+    "Socio-Religious Reform Movements (Brahmo Samaj, Arya Samaj, and others)",
+    "Revolt of 1857 — causes, nature, consequences",
+    "Post-1857 Policies, Administrative Changes, Indian Councils Acts",
+    "Rise of Indian Nationalism — Formation of INC, Moderates Phase",
+    "Extremist Phase, Partition of Bengal, Swadeshi Movement",
+    "Revolutionary Activities, Home Rule Movement, Lucknow Pact",
+    "Gandhi's Arrival — Champaran, Kheda, Ahmedabad; Rowlatt Act; Jallianwala Bagh",
+    "Non-Cooperation Movement, Khilafat Movement, Simon Commission",
+    "Civil Disobedience Movement, Round Table Conferences, Communal Award, Poona Pact",
+    "Government of India Act 1935, Congress Ministries, Quit India Movement, INA & Subhas Bose",
+    "Post-War Developments — Cabinet Mission, Direct Action Day, Mountbatten Plan, Independence & Partition",
+    "Growth of Communalism, Left Movements, Peasant & Working-Class Movements, Integration of Princely States",
+    "Eminent Personalities, important Committees/Acts summary — full revision"
+  ]},
+  ancientHistory: { label:"Ancient History", color:"#8C6E4A", topics:[
+    "Pre-historic period, Indus Valley Civilization",
+    "Vedic Age — Early & Later Vedic period",
+    "Religious Movements — Jainism, Buddhism",
+    "Mauryan Empire",
+    "Post-Mauryan period (Shungas, Kushans, Satavahanas), Sangam Age",
+    "Gupta Empire, Post-Gupta period (Harshavardhana)",
+    "South Indian Kingdoms — Pallavas, Chalukyas, Cholas",
+    "Art, Architecture & Literature of Ancient India — full revision"
+  ]},
+  medievalHistory: { label:"Medieval History", color:"#6E5A8C", topics:[
+    "Early Medieval India, Rajputs, Arab & Turkish Invasions",
+    "Delhi Sultanate — Slave, Khilji, Tughlaq dynasties",
+    "Delhi Sultanate — Sayyid, Lodi dynasties, Administration",
+    "Vijayanagara & Bahmani Kingdoms",
+    "Mughal Empire — Babur to Akbar",
+    "Mughal Empire — Jahangir to Aurangzeb, Decline of the Mughals",
+    "Bhakti & Sufi Movements, Regional Kingdoms (Marathas, Sikhs)",
+    "Medieval Art, Architecture & Literature — full revision"
+  ]},
+  artCulture: { label:"Art & Culture", color:"#C77DAE", topics:[
+    "Indian Architecture — Indus to Medieval (temples, forts, mosques)",
+    "Sculpture & Pottery traditions",
+    "Indian Paintings — Mural & Miniature traditions",
+    "Classical Dances of India",
+    "Indian Music — Hindustani & Carnatic",
+    "Indian Literature (Classical & Regional)",
+    "Religion & Philosophy — Schools of Indian philosophy",
+    "Fairs, Festivals & Crafts of India",
+    "UNESCO World Heritage Sites in India, Awards & Honours",
+    "Full revision of Art & Culture"
+  ]},
+  scienceTech: { label:"Science & Technology", color:"#4A90B5", topics:[
+    "Physics basics relevant to UPSC (mechanics, units)",
+    "Space Technology — ISRO missions, satellites",
+    "Nuclear Technology, Defence Technology (missiles, DRDO)",
+    "Biotechnology basics, GM crops",
+    "Health & Medicine — diseases, vaccines",
+    "IT & Computers — basics, cyber security",
+    "Emerging Technology — AI, Robotics, Blockchain",
+    "Nanotechnology, Materials Science",
+    "Environment-related tech, Renewable energy tech",
+    "Chemistry basics relevant to UPSC (everyday chemistry, chemicals in news)",
+    "Biology basics — Human body systems, diseases",
+    "Agricultural technology, Genetics",
+    "Miscellaneous — awards in S&T, government schemes for S&T",
+    "Current S&T developments compilation",
+    "Full revision of Science & Technology"
+  ]},
+  environment: { label:"Environment & Ecology", color:"#5FA85B", topics:[
+    "Ecology basics — ecosystem, food chain, biomes",
+    "Biodiversity — types, hotspots, conservation",
+    "Protected Areas — National Parks, Wildlife Sanctuaries, Biosphere Reserves",
+    "Environmental Pollution — Air, Water, Soil",
+    "Climate Change — basics, IPCC, Paris Agreement",
+    "International Conventions & Protocols (CBD, CITES, Ramsar, Montreal Protocol)",
+    "National Environmental Policies & Acts (Environment Protection Act, Wildlife Protection Act, Forest Acts)",
+    "Environmental Organizations — UNEP and national bodies",
+    "Renewable Energy & Sustainable Development",
+    "Disaster Management basics",
+    "Species in news, Invasive species, Environmental current affairs",
+    "Full revision of Environment & Ecology"
+  ]},
+  ethics: { label:"Ethics (GS Paper 4)", color:"#D9B44A", topics:[
+    "Ethics basics — definitions, human values, dimensions",
+    "Determinants & consequences of ethics, ethics in private/public relations",
+    "Attitude — content, structure, function, influence",
+    "Aptitude & foundational values for civil service",
+    "Emotional Intelligence — concepts, utility",
+    "Moral Thinkers & Philosophers — Indian & Western",
+    "Public/Civil Service Values, ethics in public administration",
+    "Probity in Governance — concept, philosophical basis",
+    "Information sharing, transparency, accountability",
+    "Work culture, quality of service delivery",
+    "Challenges of corruption, ethical issues in international relations/funding",
+    "Case studies practice — full revision of Ethics"
+  ]},
+  essay: { label:"Essay", color:"#9C7FC9", topics:[
+    "Essay writing basics — structure, approach",
+    "Philosophical / abstract essay practice",
+    "Social issues essay practice",
+    "Economic / development essay practice",
+    "Political / governance essay practice",
+    "Essay revision — review past essays, refine style"
+  ]},
+  csat: { label:"CSAT", color:"#5B8FC9", topics:[
+    "Comprehension basics",
+    "Comprehension practice sets",
+    "Logical Reasoning — basics",
+    "Logical Reasoning — practice sets",
+    "Analytical Reasoning",
+    "Decision Making",
+    "Basic Numeracy — Number system",
+    "Basic Numeracy — Percentage, Ratio, Averages",
+    "Basic Numeracy — Time & Work, Time-Speed-Distance",
+    "Data Interpretation basics",
+    "Data Interpretation practice",
+    "Probability & Permutation-Combination basics",
+    "Mixed practice test 1",
+    "Mixed practice test 2",
+    "Full CSAT revision + strategy"
+  ]},
+  currentAffairs: { label:"Current Affairs Consolidation", color:"#C97F4A", topics:[
+    "Current Affairs — Polity & Governance (last 6 months) compilation",
+    "Current Affairs — Economy (last 6 months) compilation",
+    "Current Affairs — International Relations (last 6 months) compilation",
+    "Current Affairs — Environment & Ecology (last 6 months) compilation",
+    "Current Affairs — Science & Technology (last 6 months) compilation",
+    "Current Affairs — Schemes, Reports & Indices, Committees compilation",
+    "Current Affairs — Awards, Places in news, Miscellaneous compilation",
+    "Current Affairs — Full compilation revision + quiz"
+  ]},
+  revision1: { label:"Revision Round 1", color:"#8FA85B", topics:[
+    "Polity revision — Constitutional Framework + Fundamental Rights/DPSP",
+    "Polity revision — Union & State Executive, Legislature, Judiciary",
+    "Polity revision — Federalism, Constitutional Bodies, Local Government + MCQ practice",
+    "Geography revision — Physical Geography (Geomorphology, Climatology, Oceanography)",
+    "Geography revision — Indian Geography (Physiography, Drainage, Climate, Vegetation) + map practice",
+    "Economy revision — National Income, Money & Banking, Inflation, Public Finance",
+    "Economy revision — External Sector, Agriculture, Industry, Employment + MCQ practice",
+    "Modern History revision — 1757 to 1857 (British expansion, Revolt of 1857)",
+    "Modern History revision — 1857 to 1947 (Nationalist Movement phases)",
+    "Ancient History revision — Indus Valley to Gupta Age",
+    "Medieval History revision — Delhi Sultanate to Mughal decline",
+    "Art & Culture revision — Architecture, Painting, Music, Dance, Literature",
+    "Science & Tech revision — Space, Defence, Biotech, IT",
+    "Science & Tech revision — Health, Environment tech, emerging tech",
+    "Environment & Ecology revision — Biodiversity, Protected Areas, Pollution, Climate Change",
+    "Ethics (GS4) revision — core concepts, thinkers, case-study approach",
+    "Current Affairs revision — last 6 months compilation",
+    "Optional Paper 1 revision (PSIR / Malayalam)",
+    "Optional Paper 2 revision (PSIR / Malayalam)",
+    "Full mixed MCQ test (all subjects) + error analysis"
+  ]},
+  revision2: { label:"Revision Round 2", color:"#6FA893", topics:[
+    "Polity — Previous Year Questions practice & analysis",
+    "Polity — weak-area targeted revision based on Round 1 errors",
+    "Geography — Previous Year Questions practice & map-based revision",
+    "Geography — weak-area targeted revision",
+    "Economy — Previous Year Questions practice & Economic Survey linkage",
+    "Economy — weak-area targeted revision",
+    "Modern History — Previous Year Questions practice",
+    "Modern History — weak-area targeted revision",
+    "Ancient & Medieval History — Previous Year Questions practice",
+    "Art & Culture — Previous Year Questions practice",
+    "Science & Tech — Previous Year Questions practice",
+    "Environment — Previous Year Questions practice",
+    "Ethics — case-study practice (10 case studies)",
+    "Essay — practice writing 2 full essays + review",
+    "Current Affairs — last 12 months compilation revision",
+    "Optional Paper 1 — PYQ practice & weak-area revision",
+    "Optional Paper 2 — PYQ practice & weak-area revision",
+    "CSAT — full-length practice + strategy refinement",
+    "Full syllabus flash-card revision — Day 1",
+    "Full syllabus flash-card revision — Day 2 + full mixed mock test"
+  ]},
+  testSeries: { label:"Test Series", color:"#E4573D", topics:[
+    "Prelims Full-Length Mock Test 1 + detailed analysis",
+    "Mains GS Paper 1 Mock + review",
+    "Mains GS Paper 2 Mock + review",
+    "Prelims Full-Length Mock Test 2 + detailed analysis",
+    "Mains GS Paper 3 Mock + review",
+    "Mains GS Paper 4 (Ethics) Mock + review",
+    "Optional Paper 1 Mock + review",
+    "Prelims Full-Length Mock Test 3 + detailed analysis",
+    "Optional Paper 2 Mock + review",
+    "Essay Mock (2 essays) + review",
+    "Mains GS Paper 1 Mock 2 + review",
+    "Prelims Full-Length Mock Test 4 + detailed analysis",
+    "Mains GS Paper 2 Mock 2 + review",
+    "Mains GS Paper 3 Mock 2 + review",
+    "Optional Paper 1 Mock 2 + review",
+    "Prelims Full-Length Mock Test 5 + detailed analysis",
+    "Optional Paper 2 Mock 2 + review",
+    "Mains GS Paper 4 Mock 2 + review",
+    "Essay Mock 2 + review",
+    "Prelims Full-Length Mock Test 6 (Final) + detailed analysis",
+    "Full Mains Test simulation — all GS papers back-to-back — Day 1",
+    "Full Mains Test simulation — Optional papers back-to-back — Day 2",
+    "Final strategy review — exam-day plan, revision index check, rest"
+  ]}
+};
+
+const CORE_ORDER_DEFAULT = ["ethics","polity","geography","economy","modernHistory","ancientHistory","medievalHistory",
+  "artCulture","scienceTech","environment","essay","csat","currentAffairs"];
+const FIXED_TAIL = ["revision1","revision2","testSeries"]; /* always last — revision/test phases depend on content already covered */
+const SUBJECT_LABELS_CORE = CORE_ORDER_DEFAULT.map(k=>({key:k, label:SUBJECTS[k].label}));
+
+const PSIR_TOPICS = [
+  "Political Theory — meaning, scope, approaches (traditional & behavioural)",
+  "Theories of State — Liberal & Neo-liberal",
+  "Theories of State — Marxist, Pluralist",
+  "Theories of State — Post-colonial, Feminist",
+  "Justice — conceptions: procedural & substantive",
+  "Justice — Rawls's theory of justice",
+  "Justice — critics of Rawls: Nozick, Communitarians",
+  "Equality — social, political, economic equality",
+  "Equality — relationship with freedom, affirmative action",
+  "Rights — meaning, theories (natural, legal, positive)",
+  "Rights — kinds of rights, concept of Human Rights",
+  "Democracy — classical theories",
+  "Democracy — contemporary theories & models (participatory, deliberative)",
+  "Concept of Power — hegemony (Gramsci)",
+  "Concept of Power — ideology, legitimacy",
+  "Political Ideologies — Liberalism",
+  "Political Ideologies — Socialism, Marxism",
+  "Political Ideologies — Fascism",
+  "Political Ideologies — Gandhism",
+  "Political Ideologies — Feminism",
+  "Indian Political Thought — Dharmashastra, Kautilya, Buddhist tradition",
+  "Indian Political Thought — Sri Aurobindo, M.N. Roy",
+  "Modern Indian Political Thought — Gandhi",
+  "Modern Indian Political Thought — Ambedkar",
+  "Modern Indian Political Thought — Nehru, Lohia",
+  "Modern Indian Political Thought — Iqbal, Jinnah, Savarkar",
+  "Western Political Thought — Plato",
+  "Western Political Thought — Aristotle",
+  "Western Political Thought — Machiavelli",
+  "Western Political Thought — Hobbes",
+  "Western Political Thought — Locke",
+  "Western Political Thought — Rousseau",
+  "Western Political Thought — Marx",
+  "Western Political Thought — Gramsci, Hannah Arendt",
+  "Indian Nationalism — strategies of freedom struggle, perspectives",
+  "Making & Salient Features of the Indian Constitution",
+  "Union & State Legislature-Executive relations",
+  "Judiciary — review, activism; Federalism & Centre-State relations",
+  "Planning & Economic Development; Party system, social cleavages",
+  "Social Movements (women's, environmental, human rights) — Paper 1 full revision",
+  "Comparative Politics — nature, major approaches",
+  "State in comparative perspective — capitalist & socialist state",
+  "State under globalization",
+  "Political parties, pressure groups, social movements (comparative)",
+  "Globalization — responses from developed & developing societies",
+  "Approaches to IR — Idealist, Realist",
+  "Approaches to IR — Marxist, Systems theory, Neo-realism/Neo-liberalism",
+  "Key Concepts — national interest, security, power",
+  "Key Concepts — balance of power, deterrence",
+  "Changing International Political Order — rise & fall of superpowers",
+  "Changing International Political Order — NAM, unipolarity, multipolarity",
+  "Regionalisation — European Union",
+  "Regionalisation — ASEAN, SAARC, APEC",
+  "United Nations — main organs",
+  "United Nations — specialized agencies, reform proposals",
+  "Contemporary Concerns — Human rights in world politics",
+  "Contemporary Concerns — Environment & global commons",
+  "Contemporary Concerns — Gender justice",
+  "Contemporary Concerns — Terrorism, nuclear proliferation",
+  "Indian Foreign Policy — determinants, institutions of policy-making",
+  "Panchsheel, Non-Alignment",
+  "India's engagement with major powers post-Cold War",
+  "India-Pakistan relations",
+  "India-China relations",
+  "India-Bangladesh, Nepal relations",
+  "India-Sri Lanka, Myanmar relations",
+  "India and SAARC, regional cooperation",
+  "India and Africa, Latin America",
+  "India and global centres of power — US, EU",
+  "India, Japan, Russia, ASEAN",
+  "India and the UN system, global forums (G20, BRICS)",
+  "India's Nuclear policy, disarmament efforts",
+  "Foreign policy issues — energy security, cyber security",
+  "Foreign policy issues — diaspora, soft power",
+  "PYQ practice — Paper 1: Political Theory",
+  "PYQ practice — Paper 1: Indian Politics",
+  "PYQ practice — Paper 2: Comparative Politics",
+  "PYQ practice — Paper 2: International Relations",
+  "Answer-writing practice — mixed PSIR questions",
+  "Full PSIR revision (Paper 1 + Paper 2) + mock test"
+];
+
+const MALAYALAM_TOPICS = [
+  "Dravidian language family & Malayalam's place in it",
+  "Origin theories of the Malayalam language",
+  "Evolution stages — Pazhamalayalam (Old Malayalam) inscriptions",
+  "Pattu tradition — Ramacharitam and early Pattu works",
+  "Pattu tradition (contd.) — Krishnagatha, Niranam poets",
+  "Manipravalam tradition — origin, Champu Kavyas",
+  "Manipravalam (contd.) — Unniyachi Charitam, Unnuneeli Sandesam",
+  "Folk literature (Naadan Pattukal) — Vadakkan Pattukal, Thekkan Pattukal",
+  "Arabi-Malayalam literature",
+  "Bhakti movement's impact — Cherusseri's Krishnagatha",
+  "Ezhuthachan — Adhyatma Ramayanam, Mahabharatam",
+  "Post-Ezhuthachan period — Kunchan Nambiar & Thullal literature",
+  "Venmani poets & the transition to modern poetry",
+  "Contact with the West — missionary contribution, growth of prose",
+  "Development of Malayalam prose — early novels",
+  "Development of Malayalam grammar & lexicon works",
+  "Modern poetry — the Romantic trio: Asan, Ulloor, Vallathol (overview)",
+  "Development of Malayalam drama",
+  "Development of Malayalam short story",
+  "Development of Malayalam novel — the realism period",
+  "Progressive Literary Movement (Purogamana Sahitya movement)",
+  "Modernism (Adhunikatha) in Malayalam literature",
+  "Post-modern trends in Malayalam literature",
+  "Malayalam literary criticism — traditional criticism",
+  "Malayalam literary criticism — modern schools",
+  "Contribution of Christian missionaries to Malayalam prose",
+  "Contribution of print & journalism to literature's growth",
+  "Regional dialects & their literary reflection",
+  "Malayalam literature and social reform movements",
+  "Women writers in Malayalam literature — historical overview",
+  "Dalit literature in Malayalam",
+  "Literature of the Malayalam diaspora",
+  "Translation literature — major translated works",
+  "Children's literature in Malayalam",
+  "Malayalam cinema and literature — interconnections",
+  "Sahitya Akademi & Jnanpith awardees — overview",
+  "Major literary movements — timeline consolidation",
+  "Comparative study — influence of Sanskrit/Tamil on Malayalam",
+  "PYQ practice — Paper 1: History of Language & Literature",
+  "Full Paper 1 revision",
+  "Poetry — Kumaran Asan: Veena Poovu, Chinthavishtayaya Sita",
+  "Poetry — Vallathol: selected works",
+  "Poetry — Ulloor: selected works",
+  "Poetry — G Sankara Kurup: selected works",
+  "Poetry — Changampuzha: Ramanan and other works",
+  "Poetry — Vailoppilli Sreedhara Menon: selected works",
+  "Poetry — ONV Kurup, Akkitham: selected works",
+  "Poetry — modern & contemporary poets (overview)",
+  "Novel — O Chandu Menon: Indulekha",
+  "Novel — Thakazhi Sivasankara Pillai: Chemmeen",
+  "Novel — O V Vijayan: Khasakkinte Itihasam",
+  "Novel — M T Vasudevan Nair: selected works",
+  "Novel — S K Pottekkatt: selected works",
+  "Novel — other major novelists (overview)",
+  "Short story — Vaikom Muhammad Basheer: selected works",
+  "Short story — Lalithambika Antharjanam, Kamala Suraiya: selected works",
+  "Short story — T Padmanabhan and contemporaries",
+  "Drama — C J Thomas, N Krishna Pillai: selected works",
+  "Drama — contemporary Malayalam drama (overview)",
+  "Literary Criticism — Kuttikrishna Marar: selected essays",
+  "Literary Criticism — Kesari Balakrishna Pillai and modern critics",
+  "Literary Criticism — contemporary critical theory in Malayalam",
+  "Biography & autobiography in Malayalam literature",
+  "Travelogue writing in Malayalam",
+  "Essay tradition in Malayalam",
+  "Text analysis practice — poetry selections",
+  "Text analysis practice — novel selections",
+  "Text analysis practice — short story selections",
+  "Text analysis practice — drama & criticism selections",
+  "Comparative analysis across genres",
+  "PYQ practice — Paper 2: poetry & prose",
+  "PYQ practice — Paper 2: criticism & unseen passages",
+  "Précis / translation practice (Malayalam-English)",
+  "Answer-writing practice — mixed Paper 2 questions",
+  "Revision — poetry texts",
+  "Revision — prose texts (novel & short story)",
+  "Revision — drama & criticism",
+  "Full Paper 2 revision",
+  "Full syllabus mock test (Paper 1 + Paper 2)",
+  "Final consolidated revision"
+];
+
+const FINAL_PHASE_CYCLE = [
+  "Integrated Revision: Polity — full re-read of notes + 20 MCQs",
+  "Integrated Revision: Geography — full re-read of notes + map practice",
+  "Integrated Revision: Economy — full re-read of notes + 20 MCQs",
+  "Integrated Revision: Modern History — full re-read of notes + 20 MCQs",
+  "Integrated Revision: Ancient & Medieval History — full re-read of notes",
+  "Integrated Revision: Art & Culture + Environment — full re-read of notes",
+  "Integrated Revision: Science & Tech + CSAT practice set",
+  "Integrated Revision: Ethics — case studies + Essay outline practice",
+  "Integrated Revision: Optional Paper 1 — full re-read of notes",
+  "Integrated Revision: Optional Paper 2 — full re-read of notes",
+  "Prelims Full-Length Mock + detailed analysis",
+  "Mains GS Paper 1 + Paper 2 Mock (back-to-back) + review",
+  "Mains GS Paper 3 + Paper 4 Mock (back-to-back) + review",
+  "Optional Paper 1 Full Mock + review",
+  "Optional Paper 2 Full Mock + review",
+  "Current Affairs — last 3 months rapid revision",
+  "Essay writing — 2 full essays under timed conditions",
+  "Weak-area revision (based on this cycle's mock errors)",
+  "Full syllabus flash-card / one-pager revision",
+  "Rest & light revision — revisit only flagged/starred topics"
+];
+
+/* Flatten GS days 1-220, then append the fixed final integrated phase (221-300) */
+let GS_DAYS = [];
+function rebuildGSDays(coreOrder){
+  GS_DAYS = [];
+  coreOrder.concat(FIXED_TAIL).forEach(key=>{
+    const subj = SUBJECTS[key];
+    subj.topics.forEach((topic, idx)=>{
+      GS_DAYS.push({
+        day: GS_DAYS.length+1,
+        subjectKey:key,
+        subjectLabel: subj.label,
+        color: subj.color,
+        topic: topic,
+        posInSubject: idx+1,
+        subjectTotal: subj.topics.length
+      });
+    });
+  });
+  for(let c=0;c<4;c++){
+    for(let i=0;i<20;i++){
+      const day = GS_DAYS.length+1;
+      let topic = FINAL_PHASE_CYCLE[i];
+      if(c>0) topic += " — Round " + (c+1);
+      GS_DAYS.push({
+        day, subjectKey:"finalPhase", subjectLabel:"Final Integrated Phase", color:"#C9A227",
+        topic, posInSubject: c*20+i+1, subjectTotal:80
+      });
+    }
+  }
+}
+rebuildGSDays(CORE_ORDER_DEFAULT);
+
+const TOTAL_DAYS = 300;
+const OPTIONAL_DAYS = 80;
+
+/* Daily current-affairs theme rotation — a habit slot every single day, distinct from the
+   periodic "Current Affairs Consolidation" phase which revises what's been noted here. */
+const CA_THEMES = ["Polity & Governance","Economy","International Relations","Environment & Ecology",
+  "Science & Technology","Schemes, Reports & Indices","Miscellaneous / Art & Culture / Social Issues"];
+function caTopicForDay(day){
+  const theme = CA_THEMES[(day-1) % CA_THEMES.length];
+  return "Read today's newspaper/CA source with a lens on " + theme + ". Note 3–5 Prelims/Mains-worthy points.";
+}
+
+/* ============== STATE ============== */
+let state = {
+  day: 1,
+  profile: "psir", /* 'psir' or 'malayalam' */
+  settings: { gsMin:120, optMin:90, awMin:45, revMin:30, caMin:60, startDate:"" },
+  progress: {}, /* profile -> {day: {gs,opt,aw,rev,ca}} */
+  subjectOrder: CORE_ORDER_DEFAULT.slice(),
+  sync: { url:"", key:"", code:"" }, /* Supabase config — kept separate from plan settings */
+  notifPermAsked:false
+};
+let timers = {}; /* slot -> {remaining, running, intervalId, duration} */
+let storageReady = false;
+let syncStatus = "off"; /* off | synced | syncing | error */
+
+function optionalTopics(){ return state.profile==="psir" ? PSIR_TOPICS : MALAYALAM_TOPICS; }
+function optionalLabel(){ return state.profile==="psir" ? "PSIR — Political Science & IR" : "Malayalam Literature"; }
+
+/* ============== SUPABASE SYNC (optional cloud backup, best-effort) ==============
+   Table needed in your Supabase project:
+
+   create table upsc_sync (
+     id bigint generated always as identity primary key,
+     sync_code text not null,
+     scope text not null,
+     key text not null,
+     value jsonb not null,
+     updated_at timestamptz default now(),
+     unique (sync_code, scope, key)
+   );
+   alter table upsc_sync enable row level security;
+   create policy "allow anon all" on upsc_sync for all using (true) with check (true);
+
+   Enter your Project URL, anon/public API key, and a private "sync code" (any string
+   you both use) in Settings → Cloud Sync. Everything still works locally without this. */
+function supaConfigured(){
+  return !!(state.sync.url && state.sync.key && state.sync.code);
+}
+function setSyncStatus(s){
+  syncStatus = s;
+  const el = document.getElementById('syncStatusText');
+  if(el) el.textContent = syncStatusLabel();
+}
+function syncStatusLabel(){
+  if(!supaConfigured()) return "Not configured — saving locally only";
+  if(syncStatus==='synced') return "Synced ✓";
+  if(syncStatus==='syncing') return "Syncing…";
+  if(syncStatus==='error') return "Sync error — check URL/key/network";
+  return "Configured — not yet synced";
+}
+async function supaUpsert(scope, key, value){
+  if(!supaConfigured()) return;
+  setSyncStatus('syncing');
+  try{
+    const url = state.sync.url.replace(/\/$/,'') + '/rest/v1/upsc_sync?on_conflict=sync_code,scope,key';
+    const res = await fetch(url, {
+      method:'POST',
+      headers:{
+        'apikey': state.sync.key,
+        'Authorization': 'Bearer '+state.sync.key,
+        'Content-Type':'application/json',
+        'Prefer':'resolution=merge-duplicates'
+      },
+      body: JSON.stringify([{ sync_code: state.sync.code, scope, key, value, updated_at: new Date().toISOString() }])
+    });
+    if(!res.ok) throw new Error('status '+res.status);
+    setSyncStatus('synced');
+  }catch(e){ setSyncStatus('error'); }
+}
+async function supaFetch(scope, key){
+  if(!supaConfigured()) return undefined;
+  try{
+    const url = state.sync.url.replace(/\/$/,'') + '/rest/v1/upsc_sync?sync_code=eq.'+encodeURIComponent(state.sync.code)+
+      '&scope=eq.'+encodeURIComponent(scope)+'&key=eq.'+encodeURIComponent(key)+'&select=value';
+    const res = await fetch(url, { headers:{ 'apikey': state.sync.key, 'Authorization':'Bearer '+state.sync.key } });
+    if(!res.ok) throw new Error('status '+res.status);
+    const data = await res.json();
+    setSyncStatus('synced');
+    return (data && data.length) ? data[0].value : null;
+  }catch(e){ setSyncStatus('error'); return undefined; }
+}
+async function pullAllFromSupabase(){
+  if(!supaConfigured()) return;
+  const remoteSettings = await supaFetch('shared','settings');
+  if(remoteSettings) state.settings = Object.assign(state.settings, remoteSettings);
+  const remoteOrder = await supaFetch('shared','subjectOrder');
+  if(remoteOrder && Array.isArray(remoteOrder) && remoteOrder.length===CORE_ORDER_DEFAULT.length){
+    state.subjectOrder = remoteOrder; rebuildGSDays(state.subjectOrder);
+  }
+  const remoteDay = await supaFetch('shared','currentDay');
+  if(remoteDay) state.day = remoteDay;
+  const remoteProgress = await supaFetch(state.profile,'progress');
+  if(remoteProgress) state.progress[state.profile] = remoteProgress;
+}
+async function pushAllToSupabase(){
+  if(!supaConfigured()) return;
+  await supaUpsert('shared','settings', state.settings);
+  await supaUpsert('shared','subjectOrder', state.subjectOrder);
+  await supaUpsert('shared','currentDay', state.day);
+  await supaUpsert(state.profile,'progress', state.progress[state.profile]||{});
+}
+async function manualSyncNow(){
+  await pullAllFromSupabase();
+  await pushAllToSupabase();
+  render();
+}
+
+/* ============== PERSISTENCE ============== */
+async function loadState(){
+  try{
+    const sy = await window.storage.get('sync');
+    if(sy && sy.value) state.sync = Object.assign(state.sync, JSON.parse(sy.value));
+  }catch(e){}
+  try{
+    const s = await window.storage.get('settings');
+    if(s && s.value) state.settings = Object.assign(state.settings, JSON.parse(s.value));
+  }catch(e){}
+  try{
+    const so = await window.storage.get('subjectOrder');
+    if(so && so.value){
+      const parsed = JSON.parse(so.value);
+      if(Array.isArray(parsed) && parsed.length===CORE_ORDER_DEFAULT.length){
+        state.subjectOrder = parsed; rebuildGSDays(state.subjectOrder);
+      }
+    }
+  }catch(e){}
+  try{
+    const p = await window.storage.get('profile');
+    if(p && p.value) state.profile = p.value;
+  }catch(e){}
+  try{
+    const d = await window.storage.get('currentDay');
+    if(d && d.value) state.day = parseInt(d.value,10) || 1;
+  }catch(e){}
+  await loadProgress();
+  if(supaConfigured()){ await pullAllFromSupabase(); }
+  storageReady = true;
+}
+async function loadProgress(){
+  try{
+    const key = 'progress:'+state.profile;
+    const r = await window.storage.get(key);
+    state.progress[state.profile] = (r && r.value) ? JSON.parse(r.value) : {};
+  }catch(e){
+    state.progress[state.profile] = state.progress[state.profile] || {};
+  }
+}
+async function saveSync(){
+  try{ await window.storage.set('sync', JSON.stringify(state.sync)); }catch(e){}
+}
+async function saveSettings(){
+  try{ await window.storage.set('settings', JSON.stringify(state.settings)); }catch(e){}
+  supaUpsert('shared','settings', state.settings);
+}
+async function saveSubjectOrder(){
+  try{ await window.storage.set('subjectOrder', JSON.stringify(state.subjectOrder)); }catch(e){}
+  supaUpsert('shared','subjectOrder', state.subjectOrder);
+}
+async function saveProfile(){
+  try{ await window.storage.set('profile', state.profile); }catch(e){}
+}
+async function saveDay(){
+  try{ await window.storage.set('currentDay', String(state.day)); }catch(e){}
+  supaUpsert('shared','currentDay', state.day);
+}
+async function saveProgress(){
+  try{
+    const key='progress:'+state.profile;
+    await window.storage.set(key, JSON.stringify(state.progress[state.profile]||{}));
+  }catch(e){}
+  supaUpsert(state.profile,'progress', state.progress[state.profile]||{});
+}
+
+function getDayProgress(day){
+  const p = state.progress[state.profile] || {};
+  return p[day] || {gs:false, opt:false, aw:false, rev:false, ca:false};
+}
+function setDayProgress(day, slot, val){
+  const p = state.progress[state.profile] || {};
+  const d = p[day] || {gs:false, opt:false, aw:false, rev:false, ca:false};
+  d[slot]=val;
+  p[day]=d;
+  state.progress[state.profile]=p;
+  saveProgress();
+}
+
+/* ============== REVISION LOGIC ============== */
+function getRevisionItems(day){
+  const offsets = [1,3,7,28,90];
+  const items = [];
+  offsets.forEach(o=>{
+    const src = day - o;
+    if(src>=1 && src<=TOTAL_DAYS){
+      const g = GS_DAYS[src-1];
+      items.push({when:o+"d", label:g.subjectLabel, topic:g.topic});
+      if(src<=OPTIONAL_DAYS){
+        items.push({when:o+"d", label:optionalLabel(), topic:optionalTopics()[src-1]});
+      }
+    }
+  });
+  return items;
+}
+
+/* ============== AUDIO / NOTIFY ============== */
+function beep(){
+  try{
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new Ctx();
+    [880,660,880].forEach((freq,i)=>{
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type='sine'; o.frequency.value=freq;
+      o.connect(g); g.connect(ctx.destination);
+      const t = ctx.currentTime + i*0.28;
+      g.gain.setValueAtTime(0.001, t);
+      g.gain.linearRampToValueAtTime(0.25, t+0.02);
+      g.gain.linearRampToValueAtTime(0.001, t+0.24);
+      o.start(t); o.stop(t+0.26);
+    });
+  }catch(e){}
+}
+function tryNotify(title, body){
+  try{
+    if('Notification' in window){
+      if(Notification.permission==='granted'){ new Notification(title, {body}); }
+    }
+  }catch(e){}
+}
+function requestNotifPerm(){
+  try{
+    if('Notification' in window && Notification.permission==='default'){
+      Notification.requestPermission();
+    }
+  }catch(e){}
+}
+
+function showBanner(msg){
+  const b = document.createElement('div');
+  b.className='banner';
+  b.textContent = msg;
+  document.body.appendChild(b);
+  setTimeout(()=>{ b.remove(); }, 4200);
+}
+
+/* ============== TIMERS ============== */
+function fmt(sec){
+  const m = Math.floor(sec/60), s = sec%60;
+  return String(m).padStart(2,'0')+":"+String(s).padStart(2,'0');
+}
+function slotMinutes(slot){
+  if(slot==='gs') return state.settings.gsMin;
+  if(slot==='opt') return state.settings.optMin;
+  if(slot==='aw') return state.settings.awMin;
+  if(slot==='rev') return state.settings.revMin;
+  if(slot==='ca') return state.settings.caMin;
+  return 30;
+}
+function slotName(slot){
+  if(slot==='gs') return 'Subject 1';
+  if(slot==='opt') return 'Optional';
+  if(slot==='aw') return 'Answer Writing';
+  if(slot==='rev') return 'Spaced Revision';
+  if(slot==='ca') return 'Current Affairs';
+}
+function initTimer(slot){
+  if(!timers[slot] || timers[slot].justSetDuration){
+    timers[slot] = { remaining: slotMinutes(slot)*60, running:false, intervalId:null };
+  }
+}
+function startTimer(slot){
+  initTimer(slot);
+  if(timers[slot].running) return;
+  timers[slot].running = true;
+  timers[slot].intervalId = setInterval(()=>{
+    timers[slot].remaining -= 1;
+    updateTimerDisplay(slot);
+    if(timers[slot].remaining<=0){
+      clearInterval(timers[slot].intervalId);
+      timers[slot].running=false;
+      timers[slot].remaining=0;
+      updateTimerDisplay(slot);
+      onSlotTimeUp(slot);
+    }
+  },1000);
+  updateButtons(slot);
+}
+function pauseTimer(slot){
+  if(timers[slot] && timers[slot].intervalId) clearInterval(timers[slot].intervalId);
+  if(timers[slot]) timers[slot].running=false;
+  updateButtons(slot);
+}
+function resetTimer(slot){
+  if(timers[slot] && timers[slot].intervalId) clearInterval(timers[slot].intervalId);
+  timers[slot] = { remaining: slotMinutes(slot)*60, running:false, intervalId:null };
+  updateTimerDisplay(slot);
+  updateButtons(slot);
+  const card = document.getElementById('card-'+slot);
+  if(card) card.classList.remove('flash');
+}
+function onSlotTimeUp(slot){
+  const card = document.getElementById('card-'+slot);
+  if(card){ card.classList.add('flash'); }
+  beep();
+  showBanner("Time's up — " + slotName(slot));
+  tryNotify("Time's up", slotName(slot)+" slot has ended.");
+}
+function updateTimerDisplay(slot){
+  const el = document.getElementById('timer-'+slot);
+  if(el){
+    el.textContent = fmt(timers[slot].remaining);
+    el.classList.toggle('done', timers[slot].remaining<=0);
+  }
+}
+function updateButtons(slot){
+  const startBtn = document.getElementById('start-'+slot);
+  const pauseBtn = document.getElementById('pause-'+slot);
+  if(startBtn) startBtn.disabled = timers[slot] && timers[slot].running;
+  if(pauseBtn) pauseBtn.disabled = !(timers[slot] && timers[slot].running);
+}
+function clearAllTimers(){
+  Object.keys(timers).forEach(slot=>{
+    if(timers[slot] && timers[slot].intervalId) clearInterval(timers[slot].intervalId);
+  });
+  timers = {};
+}
+
+/* ============== RENDER ============== */
+function fmtDate(d){
+  return d.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+}
+function scheduledDate(day){
+  if(!state.settings.startDate) return null;
+  const start = new Date(state.settings.startDate+"T00:00:00");
+  const d = new Date(start);
+  d.setDate(d.getDate() + (day-1));
+  return d;
+}
+
+function render(){
+  clearAllTimers();
+  const day = state.day;
+  const g = GS_DAYS[day-1];
+  const showOptional = day<=OPTIONAL_DAYS;
+  const prog = getDayProgress(day);
+  const revItems = getRevisionItems(day);
+  const dateObj = scheduledDate(day);
+
+  const doneCount = [prog.gs, prog.opt || !showOptional, prog.aw, prog.rev, prog.ca].filter(Boolean).length;
+  const totalSlots = showOptional ? 5 : 4;
+  const overallPct = Math.round((day-1+ (doneCount/totalSlots)) / TOTAL_DAYS * 100);
+
+  let spineHtml = '';
+  for(let i=1;i<=TOTAL_DAYS;i++){
+    const gg = GS_DAYS[i-1];
+    const dp = getDayProgress(i);
+    const isDone = dp.gs && dp.aw && dp.rev && dp.ca && (i>OPTIONAL_DAYS || dp.opt);
+    spineHtml += '<div class="tick'+(isDone?' done':'')+(i===day?' current':'')+'" style="background:'+gg.color+'" data-day="'+i+'" title="Day '+i+' — '+gg.subjectLabel+'"></div>';
+  }
+
+  let revHtml = '';
+  if(revItems.length===0){
+    revHtml = '<div class="topic" style="color:var(--muted)">No spaced-revision topics yet — they will appear from Day 2 onward.</div>';
+  } else {
+    revItems.forEach(it=>{
+      revHtml += '<div class="rev-item"><span class="when mono">'+it.when+'</span><strong>'+it.label+':</strong> '+it.topic+'</div>';
+    });
+  }
+
+  const html = `
+    <header class="top">
+      <div class="brand">
+        <span class="eyebrow">The Campaign Ledger</span>
+        <h1>300-Day UPSC Prep</h1>
+      </div>
+      <div class="top-actions">
+        <div class="profile-switch">
+          <button data-action="profile" data-value="psir" class="${state.profile==='psir'?'active':''}">You · PSIR</button>
+          <button data-action="profile" data-value="malayalam" class="${state.profile==='malayalam'?'active':''}">Partner · Malayalam</button>
+        </div>
+        <button class="icon ghost" data-action="report" aria-label="Weekly report">⬇</button>
+        <button class="icon ghost" data-action="settings" aria-label="Settings">⚙</button>
+      </div>
+    </header>
+
+    <div class="daynav">
+      <button class="icon" data-action="prevday" ${day<=1?'disabled':''}>◀</button>
+      <div class="center">
+        <div class="daynum mono">Day ${day} <span style="color:var(--muted); font-size:16px;">/ ${TOTAL_DAYS}</span></div>
+        <div class="phase">${g.subjectLabel} · ${g.posInSubject}/${g.subjectTotal}${showOptional ? ' · + Optional running alongside' : ''}</div>
+        ${dateObj ? '<div class="datestr">'+fmtDate(dateObj)+'</div>' : ''}
+      </div>
+      <button class="icon" data-action="nextday" ${day>=TOTAL_DAYS?'disabled':''}>▶</button>
+    </div>
+
+    <div class="progressbar"><div style="width:${overallPct}%"></div></div>
+
+    <div class="spine-wrap"><div class="spine">${spineHtml}</div></div>
+
+    <div class="grid">
+      <div class="card" id="card-gs">
+        <span class="label">Subject 1 of 2</span>
+        <h3>${g.subjectLabel}</h3>
+        <div class="topic">${g.topic}</div>
+        <div class="row">
+          <label class="check"><input type="checkbox" data-action="check" data-slot="gs" ${prog.gs?'checked':''}/> Done</label>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="timer mono" id="timer-gs">${fmt(slotMinutes('gs')*60)}</span>
+            <button class="icon" id="start-gs" data-action="start" data-slot="gs">▶</button>
+            <button class="icon" id="pause-gs" data-action="pause" data-slot="gs" disabled>❚❚</button>
+            <button class="icon ghost" data-action="reset" data-slot="gs">↺</button>
+          </div>
+        </div>
+      </div>
+
+      ${showOptional ? `
+      <div class="card" id="card-opt">
+        <span class="label">Subject 2 of 2 — Optional</span>
+        <h3>${optionalLabel()}</h3>
+        <div class="topic">${optionalTopics()[day-1]}</div>
+        <div class="meta">Optional day ${day} of ${OPTIONAL_DAYS} — runs alongside your GS subject for the first ${OPTIONAL_DAYS} days.</div>
+        <div class="row">
+          <label class="check"><input type="checkbox" data-action="check" data-slot="opt" ${prog.opt?'checked':''}/> Done</label>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="timer mono" id="timer-opt">${fmt(slotMinutes('opt')*60)}</span>
+            <button class="icon" id="start-opt" data-action="start" data-slot="opt">▶</button>
+            <button class="icon" id="pause-opt" data-action="pause" data-slot="opt" disabled>❚❚</button>
+            <button class="icon ghost" data-action="reset" data-slot="opt">↺</button>
+          </div>
+        </div>
+      </div>` : `
+      <div class="card">
+        <span class="label">Optional — complete</span>
+        <h3>${optionalLabel()}</h3>
+        <div class="topic" style="color:var(--muted)">Optional syllabus finished on Day ${OPTIONAL_DAYS}. It returns as revision on days 221–300.</div>
+      </div>`}
+
+      <div class="card" id="card-aw">
+        <span class="label">Answer Writing</span>
+        <h3>Daily Practice</h3>
+        <div class="topic">Write ${showOptional ? '2 GS-style answers on today\\u2019s ' + g.subjectLabel + ' topic, plus 1 optional-style answer' : '2–3 mains-style answers based on today\\u2019s ' + g.subjectLabel + ' topic'}.</div>
+        <div class="row">
+          <label class="check"><input type="checkbox" data-action="check" data-slot="aw" ${prog.aw?'checked':''}/> Done</label>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="timer mono" id="timer-aw">${fmt(slotMinutes('aw')*60)}</span>
+            <button class="icon" id="start-aw" data-action="start" data-slot="aw">▶</button>
+            <button class="icon" id="pause-aw" data-action="pause" data-slot="aw" disabled>❚❚</button>
+            <button class="icon ghost" data-action="reset" data-slot="aw">↺</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="card-ca">
+        <span class="label">Daily Habit</span>
+        <h3>Current Affairs</h3>
+        <div class="topic">${caTopicForDay(day)}</div>
+        <div class="row">
+          <label class="check"><input type="checkbox" data-action="check" data-slot="ca" ${prog.ca?'checked':''}/> Done</label>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="timer mono" id="timer-ca">${fmt(slotMinutes('ca')*60)}</span>
+            <button class="icon" id="start-ca" data-action="start" data-slot="ca">▶</button>
+            <button class="icon" id="pause-ca" data-action="pause" data-slot="ca" disabled>❚❚</button>
+            <button class="icon ghost" data-action="reset" data-slot="ca">↺</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="card-rev">
+        <span class="label">Spaced Revision</span>
+        <h3>1 / 3 / 7 / 28 / 90-day recall</h3>
+        <div>${revHtml}</div>
+        <div class="row">
+          <label class="check"><input type="checkbox" data-action="check" data-slot="rev" ${prog.rev?'checked':''}/> Done</label>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="timer mono" id="timer-rev">${fmt(slotMinutes('rev')*60)}</span>
+            <button class="icon" id="start-rev" data-action="start" data-slot="rev">▶</button>
+            <button class="icon" id="pause-rev" data-action="pause" data-slot="rev" disabled>❚❚</button>
+            <button class="icon ghost" data-action="reset" data-slot="rev">↺</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      Every day now has 5 slots: GS subject, Optional (days 1–${OPTIONAL_DAYS} only), Answer Writing, a 1-hour daily Current Affairs habit (newspaper/CA source, theme rotates through the week), and Spaced Revision. Days 1–${OPTIONAL_DAYS}: your GS subject runs alongside your optional. Days ${OPTIONAL_DAYS+1}–220: remaining GS syllabus (Ancient/Medieval History, Culture, Science &amp; Tech, Environment, Ethics, Essay, CSAT, plus a dedicated Current-Affairs-Consolidation block that revises everything logged in the daily habit slot) with two revision rounds and a test-series block. Days 221–300: a 4-cycle integrated revision + full mock-test phase covering GS and optional together.
+      Malayalam optional text/author list follows the standard syllabus structure — please cross-check specific prescribed works against your current UPSC syllabus notification.
+    </div>
+
+    <div id="modalRoot"></div>
+  `;
+  document.getElementById('app').innerHTML = html;
+  attachHandlers();
+}
+
+function attachHandlers(){
+  document.querySelectorAll('[data-action="profile"]').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      state.profile = b.getAttribute('data-value');
+      await saveProfile();
+      await loadProgress();
+      if(supaConfigured()){
+        const remoteProgress = await supaFetch(state.profile,'progress');
+        if(remoteProgress) state.progress[state.profile] = remoteProgress;
+      }
+      render();
+    });
+  });
+  const prev = document.querySelector('[data-action="prevday"]');
+  if(prev) prev.addEventListener('click', ()=>{ if(state.day>1){ state.day--; saveDay(); render(); } });
+  const next = document.querySelector('[data-action="nextday"]');
+  if(next) next.addEventListener('click', ()=>{ if(state.day<TOTAL_DAYS){ state.day++; saveDay(); render(); } });
+
+  document.querySelectorAll('.tick').forEach(t=>{
+    t.addEventListener('click', ()=>{
+      state.day = parseInt(t.getAttribute('data-day'),10);
+      saveDay();
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-action="check"]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      setDayProgress(state.day, cb.getAttribute('data-slot'), cb.checked);
+    });
+  });
+  document.querySelectorAll('[data-action="start"]').forEach(b=>{
+    b.addEventListener('click', ()=>{ requestNotifPerm(); startTimer(b.getAttribute('data-slot')); });
+  });
+  document.querySelectorAll('[data-action="pause"]').forEach(b=>{
+    b.addEventListener('click', ()=>{ pauseTimer(b.getAttribute('data-slot')); });
+  });
+  document.querySelectorAll('[data-action="reset"]').forEach(b=>{
+    b.addEventListener('click', ()=>{ resetTimer(b.getAttribute('data-slot')); });
+  });
+
+  const settingsBtn = document.querySelector('[data-action="settings"]');
+  if(settingsBtn) settingsBtn.addEventListener('click', openSettings);
+  const reportBtn = document.querySelector('[data-action="report"]');
+  if(reportBtn) reportBtn.addEventListener('click', ()=>openWeeklyReport(Math.ceil(state.day/7)));
+}
+
+function openSettings(){
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <h2>Slot durations &amp; schedule</h2>
+        <div class="field"><label>Subject 1 (GS) — minutes</label><input type="number" min="5" id="set-gs" value="${state.settings.gsMin}"></div>
+        <div class="field"><label>Optional — minutes</label><input type="number" min="5" id="set-opt" value="${state.settings.optMin}"></div>
+        <div class="field"><label>Answer Writing — minutes</label><input type="number" min="5" id="set-aw" value="${state.settings.awMin}"></div>
+        <div class="field"><label>Spaced Revision — minutes</label><input type="number" min="5" id="set-rev" value="${state.settings.revMin}"></div>
+        <div class="field"><label>Current Affairs — minutes</label><input type="number" min="5" id="set-ca" value="${state.settings.caMin}"></div>
+        <div class="field"><label>Start date (Day 1)</label><input type="date" id="set-start" value="${state.settings.startDate||''}"></div>
+        <button style="width:100%; margin-top:4px;" data-action="notifperm">Enable browser notifications (best-effort)</button>
+        <button style="width:100%; margin-top:8px;" data-action="openReorder">Reorder subject sequence →</button>
+
+        <h2 style="margin-top:20px;">Cloud sync (Supabase)</h2>
+        <div class="field"><label>Project URL</label><input type="text" id="set-supa-url" placeholder="https://xxxx.supabase.co" value="${state.sync.url}" style="width:170px;"></div>
+        <div class="field"><label>Anon/public API key</label><input type="text" id="set-supa-key" placeholder="eyJ..." value="${state.sync.key}" style="width:170px;"></div>
+        <div class="field"><label>Sync code (shared by both of you)</label><input type="text" id="set-supa-code" placeholder="e.g. rowan-ledger-92" value="${state.sync.code}" style="width:170px;"></div>
+        <div class="field"><label>Status</label><span id="syncStatusText" class="mono" style="font-size:11px;">${syncStatusLabel()}</span></div>
+        <button style="width:100%;" data-action="syncNow">Sync now</button>
+        <div class="note" style="margin-top:10px; padding-top:10px;">Leave these blank to keep everything device-local. To enable sync, create a Supabase project, run the SQL for the <span class="mono">upsc_sync</span> table (see comment at top of this app's code), then paste your Project URL, anon key, and a private sync code here — enter the same sync code on both your devices.</div>
+
+        <div class="close-row">
+          <button class="ghost" data-action="closeModal">Cancel</button>
+          <button class="primary" data-action="saveSettings">Save</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
+  document.querySelector('[data-action="closeModal"]').addEventListener('click', closeModal);
+  document.querySelector('[data-action="notifperm"]').addEventListener('click', requestNotifPerm);
+  document.querySelector('[data-action="openReorder"]').addEventListener('click', openReorderModal);
+  document.querySelector('[data-action="syncNow"]').addEventListener('click', async ()=>{
+    state.sync.url = document.getElementById('set-supa-url').value.trim();
+    state.sync.key = document.getElementById('set-supa-key').value.trim();
+    state.sync.code = document.getElementById('set-supa-code').value.trim();
+    await saveSync();
+    setSyncStatus(supaConfigured() ? 'syncing' : 'off');
+    await manualSyncNow();
+    openSettings();
+  });
+  document.querySelector('[data-action="saveSettings"]').addEventListener('click', async ()=>{
+    state.settings.gsMin = parseInt(document.getElementById('set-gs').value,10) || state.settings.gsMin;
+    state.settings.optMin = parseInt(document.getElementById('set-opt').value,10) || state.settings.optMin;
+    state.settings.awMin = parseInt(document.getElementById('set-aw').value,10) || state.settings.awMin;
+    state.settings.revMin = parseInt(document.getElementById('set-rev').value,10) || state.settings.revMin;
+    state.settings.caMin = parseInt(document.getElementById('set-ca').value,10) || state.settings.caMin;
+    state.settings.startDate = document.getElementById('set-start').value || '';
+    state.sync.url = document.getElementById('set-supa-url').value.trim();
+    state.sync.key = document.getElementById('set-supa-key').value.trim();
+    state.sync.code = document.getElementById('set-supa-code').value.trim();
+    await saveSettings();
+    await saveSync();
+    closeModal();
+    render();
+  });
+}
+
+function openReorderModal(){
+  const root = document.getElementById('modalRoot');
+  const rows = state.subjectOrder.map((key,i)=>{
+    const label = SUBJECTS[key].label;
+    return `<div class="field" data-key="${key}">
+      <label>${i+1}. ${esc(label)}</label>
+      <div style="display:flex; gap:6px;">
+        <button class="icon" data-action="moveUp" data-idx="${i}" ${i===0?'disabled':''}>▲</button>
+        <button class="icon" data-action="moveDown" data-idx="${i}" ${i===state.subjectOrder.length-1?'disabled':''}>▼</button>
+      </div>
+    </div>`;
+  }).join('');
+  root.innerHTML = `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <h2>Reorder subject sequence</h2>
+        <div class="note" style="margin-top:0; border-top:none; padding-top:0;">Revision Rounds and the Test Series always stay last since they depend on content already covered. Heads up: reordering reshuffles which day maps to which topic — if you've already marked days complete, those checkmarks stay tied to the day number, not the subject, so double-check after reordering.</div>
+        ${rows}
+        <div class="close-row">
+          <button class="ghost" data-action="resetOrder">Reset to default</button>
+          <button class="ghost" data-action="backToSettings">Back</button>
+          <button class="primary" data-action="saveOrder">Save order</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
+  document.querySelector('[data-action="backToSettings"]').addEventListener('click', openSettings);
+  document.querySelector('[data-action="resetOrder"]').addEventListener('click', ()=>{
+    state.subjectOrder = CORE_ORDER_DEFAULT.slice();
+    openReorderModal();
+  });
+  document.querySelectorAll('[data-action="moveUp"]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const i = parseInt(b.getAttribute('data-idx'),10);
+      if(i>0){ const t=state.subjectOrder[i-1]; state.subjectOrder[i-1]=state.subjectOrder[i]; state.subjectOrder[i]=t; }
+      openReorderModal();
+    });
+  });
+  document.querySelectorAll('[data-action="moveDown"]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const i = parseInt(b.getAttribute('data-idx'),10);
+      if(i<state.subjectOrder.length-1){ const t=state.subjectOrder[i+1]; state.subjectOrder[i+1]=state.subjectOrder[i]; state.subjectOrder[i]=t; }
+      openReorderModal();
+    });
+  });
+  document.querySelector('[data-action="saveOrder"]').addEventListener('click', async ()=>{
+    rebuildGSDays(state.subjectOrder);
+    await saveSubjectOrder();
+    closeModal();
+    render();
+  });
+}
+
+function closeModal(){
+  const root = document.getElementById('modalRoot');
+  if(root) root.innerHTML='';
+}
+
+const WEEK_SIZE = 7;
+const TOTAL_WEEKS = Math.ceil(TOTAL_DAYS / WEEK_SIZE);
+
+function weekBounds(weekNum){
+  const start = (weekNum-1)*WEEK_SIZE + 1;
+  const end = Math.min(weekNum*WEEK_SIZE, TOTAL_DAYS);
+  return {start, end};
+}
+
+function buildWeekRows(weekNum){
+  const {start, end} = weekBounds(weekNum);
+  const rows = [];
+  for(let day=start; day<=end; day++){
+    const g = GS_DAYS[day-1];
+    const showOptional = day<=OPTIONAL_DAYS;
+    const prog = getDayProgress(day);
+    const dateObj = scheduledDate(day);
+    rows.push({
+      day, dateObj,
+      gsLabel: g.subjectLabel, gsTopic: g.topic,
+      optTopic: showOptional ? optionalTopics()[day-1] : null,
+      caTopic: caTopicForDay(day),
+      slots: {gs:prog.gs, opt: showOptional? prog.opt : null, aw:prog.aw, ca:prog.ca, rev:prog.rev},
+      showOptional
+    });
+  }
+  return rows;
+}
+
+function weekCompletionPct(rows){
+  let done=0, total=0;
+  rows.forEach(r=>{
+    Object.values(r.slots).forEach(v=>{ if(v!==null){ total++; if(v) done++; } });
+  });
+  return total? Math.round(done/total*100) : 0;
+}
+
+function openWeeklyReport(weekNum){
+  weekNum = Math.max(1, Math.min(TOTAL_WEEKS, weekNum));
+  const root = document.getElementById('modalRoot');
+  const rows = buildWeekRows(weekNum);
+  const {start,end} = weekBounds(weekNum);
+  const pct = weekCompletionPct(rows);
+  root.innerHTML = `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <h2>Weekly report</h2>
+        <div class="field">
+          <label>Week ${weekNum} of ${TOTAL_WEEKS} — Days ${start}–${end}</label>
+          <div style="display:flex; gap:6px;">
+            <button class="icon" data-action="reportPrev" ${weekNum<=1?'disabled':''}>◀</button>
+            <button class="icon" data-action="reportNext" ${weekNum>=TOTAL_WEEKS?'disabled':''}>▶</button>
+          </div>
+        </div>
+        <div class="field"><label>Completion this week</label><strong class="mono">${pct}%</strong></div>
+        <div class="field"><label>Profile</label><strong>${state.profile==='psir' ? 'You · PSIR' : 'Partner · Malayalam'}</strong></div>
+        <div class="close-row">
+          <button class="ghost" data-action="closeModal">Cancel</button>
+          <button class="primary" data-action="downloadReport" data-week="${weekNum}">Download report (.html)</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
+  document.querySelector('[data-action="closeModal"]').addEventListener('click', closeModal);
+  const prevBtn = document.querySelector('[data-action="reportPrev"]');
+  if(prevBtn) prevBtn.addEventListener('click', ()=>openWeeklyReport(weekNum-1));
+  const nextBtn = document.querySelector('[data-action="reportNext"]');
+  if(nextBtn) nextBtn.addEventListener('click', ()=>openWeeklyReport(weekNum+1));
+  document.querySelector('[data-action="downloadReport"]').addEventListener('click', ()=>{
+    downloadWeeklyReport(weekNum);
+  });
+}
+
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function generateWeeklyReportHTML(weekNum){
+  const rows = buildWeekRows(weekNum);
+  const {start,end} = weekBounds(weekNum);
+  const pct = weekCompletionPct(rows);
+  const profileLabel = state.profile==='psir' ? 'You · PSIR' : 'Partner · Malayalam';
+  const generated = new Date().toLocaleString('en-IN');
+  const mark = v => v===null ? '<span style="color:#999">—</span>' : (v ? '<span style="color:#2f7a4f">&#10003; done</span>' : '<span style="color:#b23">&#10007; pending</span>');
+
+  let rowsHtml = '';
+  rows.forEach(r=>{
+    rowsHtml += `
+    <tr>
+      <td class="mono">${r.day}${r.dateObj ? '<br><span class="muted">'+r.dateObj.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+'</span>' : ''}</td>
+      <td><strong>${esc(r.gsLabel)}</strong><br>${esc(r.gsTopic)}<br><span class="muted">${mark(r.slots.gs)}</span></td>
+      <td>${r.optTopic ? esc(r.optTopic)+'<br><span class="muted">'+mark(r.slots.opt)+'</span>' : '<span class="muted">— (optional complete)</span>'}</td>
+      <td>${mark(r.slots.aw)}</td>
+      <td>${esc(r.caTopic)}<br><span class="muted">${mark(r.slots.ca)}</span></td>
+      <td>${mark(r.slots.rev)}</td>
+    </tr>`;
+  });
+
+  return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>UPSC Prep — Week ${weekNum} Report</title>
+<style>
+  body{font-family:Georgia,'Times New Roman',serif; background:#fff; color:#1a1a1a; padding:24px; max-width:960px; margin:0 auto;}
+  h1{font-size:22px; margin-bottom:2px;}
+  .sub{color:#666; font-size:13px; margin-bottom:18px;}
+  table{border-collapse:collapse; width:100%; font-size:12px;}
+  th,td{border:1px solid #ccc; padding:8px; text-align:left; vertical-align:top;}
+  th{background:#f2ede0;}
+  .muted{color:#777; font-size:11px;}
+  .mono{font-family:'Courier New',monospace;}
+  .summary{background:#f7f4ec; border:1px solid #ddd; padding:12px 16px; border-radius:6px; margin-bottom:18px;}
+  @media print{ body{padding:0;} }
