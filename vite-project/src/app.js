@@ -1,7 +1,8 @@
 import './style.css';
 import {
   SUBJECTS, CORE_ORDER_DEFAULT, FIXED_TAIL, PSIR_TOPICS, MALAYALAM_TOPICS,
-  GS_DAYS, rebuildGSDays, TOTAL_DAYS, OPTIONAL_DAYS, caTopicForDay
+  GS_DAYS, rebuildGSDays, TOTAL_DAYS, OPTIONAL_DAYS, caTopicForDay,
+  buildWeightedSequence, recommendPYQs
 } from './data.js';
 
 
@@ -47,6 +48,10 @@ let state = {
   settings: { gsMin:120, optMin:90, awMin:45, revMin:30, caMin:60, startDate:"" },
   progress: {}, /* profile -> {day: {gs,opt,aw,rev,ca}} */
   subjectOrder: { psir: CORE_ORDER_DEFAULT.slice(), malayalam: CORE_ORDER_DEFAULT.slice() },
+  dayBudgets: {
+    gs: { psir:{}, malayalam:{} }, /* profile -> {subjectKey: totalDays} — how many days to give that whole subject; app splits them across its topics by weight */
+    opt: { psir:null, malayalam:null } /* profile -> totalDays for the whole optional syllabus, or null for the default 1 day/topic */
+  },
   dayChoice: { psir:{}, malayalam:{} }, /* profile -> {day: {subjectKey, idx}} — manual GS topic pick, overrides the planned sequence */
   optChoice: { psir:{}, malayalam:{} }, /* profile -> {day: idx} — manual optional-topic pick */
   totalSeconds: { psir:0, malayalam:0 }, /* lifetime cumulative seconds studied, per profile */
@@ -77,12 +82,25 @@ function getEffectiveGS(day, profile){
     return {
       subjectKey: choice.subjectKey, subjectLabel: subj.label, color: subj.color,
       topic: subj.topics[choice.idx], posInSubject: choice.idx+1, subjectTotal: subj.topics.length,
+      topicDayIndex: 1, topicDayTotal: 1,
       isOverride: true
     };
   }
   const g = GS_DAYS[day-1];
   return { subjectKey:g.subjectKey, subjectLabel:g.subjectLabel, color:g.color, topic:g.topic,
-    posInSubject:g.posInSubject, subjectTotal:g.subjectTotal, isOverride:false };
+    posInSubject:g.posInSubject, subjectTotal:g.subjectTotal,
+    topicDayIndex: g.topicDayIndex||1, topicDayTotal: g.topicDayTotal||1, isOverride:false };
+}
+/* Cached per profile so we don't rebuild the weighted sequence on every render;
+   invalidated whenever the optional day-budget is saved (see saveDayBudgets). */
+let optSeqCache = { psir:null, malayalam:null };
+function getOptSequence(profile){
+  if(optSeqCache[profile]) return optSeqCache[profile];
+  const topics = profile==='psir' ? PSIR_TOPICS : MALAYALAM_TOPICS;
+  const budget = state.dayBudgets.opt[profile];
+  const seq = (budget && budget!==topics.length) ? buildWeightedSequence(topics, budget).seq : topics.map((_,i)=>i);
+  optSeqCache[profile] = seq;
+  return seq;
 }
 function getEffectiveOpt(day, profile){
   profile = profile || state.profile;
@@ -91,7 +109,8 @@ function getEffectiveOpt(day, profile){
   if(choice!==undefined && topics[choice]!==undefined){
     return { idx:choice, topic:topics[choice], isOverride:true };
   }
-  const idx = (day-1) % topics.length; /* cycles through once the first pass (days 1-80) is done */
+  const seq = getOptSequence(profile);
+  const idx = seq[(day-1) % seq.length]; /* cycles through once the first pass is done */
   return { idx, topic:topics[idx], isOverride:false };
 }
 
@@ -177,6 +196,16 @@ async function loadProfileScopedData(profile){
     const oc = await window.storage.get('optChoice:'+profile);
     if(oc && oc.value) state.optChoice[profile] = JSON.parse(oc.value);
   }catch(e){}
+  /* dayBudgets — GS per-subject day totals, and optional total-day budget */
+  try{
+    const bg = await window.storage.get('dayBudgetsGS:'+profile);
+    if(bg && bg.value) state.dayBudgets.gs[profile] = JSON.parse(bg.value);
+  }catch(e){}
+  try{
+    const bo = await window.storage.get('dayBudgetOpt:'+profile);
+    if(bo && bo.value) state.dayBudgets.opt[profile] = JSON.parse(bo.value);
+  }catch(e){}
+  optSeqCache[profile] = null;
   /* dailySlotSeconds */
   try{
     const dss = await window.storage.get('dailySlotSeconds:'+profile);
@@ -202,6 +231,11 @@ async function loadProfileScopedData(profile){
     if(remoteDayChoice) state.dayChoice[profile] = remoteDayChoice;
     const remoteOptChoice = await supaFetch(profile,'optChoice');
     if(remoteOptChoice) state.optChoice[profile] = remoteOptChoice;
+    const remoteBudgetsGS = await supaFetch(profile,'dayBudgetsGS');
+    if(remoteBudgetsGS) state.dayBudgets.gs[profile] = remoteBudgetsGS;
+    const remoteBudgetOpt = await supaFetch(profile,'dayBudgetOpt');
+    if(remoteBudgetOpt!==undefined && remoteBudgetOpt!==null) state.dayBudgets.opt[profile] = remoteBudgetOpt;
+    optSeqCache[profile] = null;
     const remoteDailySlotSeconds = await supaFetch(profile,'dailySlotSeconds');
     if(remoteDailySlotSeconds) state.dailySlotSeconds[profile] = remoteDailySlotSeconds;
     const remoteNotes = await supaFetch(profile,'notes');
@@ -215,7 +249,7 @@ async function pullAllFromSupabase(){
   const remoteSettings = await supaFetch('shared','settings');
   if(remoteSettings) state.settings = Object.assign(state.settings, remoteSettings);
   await loadProfileScopedData(state.profile);
-  rebuildGSDays(state.subjectOrder[state.profile]);
+  rebuildGSDays(state.subjectOrder[state.profile], state.dayBudgets.gs[state.profile]);
   const remoteDay = await supaFetch('shared','currentDay');
   if(remoteDay) state.day = remoteDay;
   const remoteProgress = await supaFetch(state.profile,'progress');
@@ -227,6 +261,8 @@ async function pushAllToSupabase(){
   await supaUpsert(state.profile,'subjectOrder', state.subjectOrder[state.profile]);
   await supaUpsert(state.profile,'dayChoice', state.dayChoice[state.profile]||{});
   await supaUpsert(state.profile,'optChoice', state.optChoice[state.profile]||{});
+  await supaUpsert(state.profile,'dayBudgetsGS', state.dayBudgets.gs[state.profile]||{});
+  await supaUpsert(state.profile,'dayBudgetOpt', state.dayBudgets.opt[state.profile]||null);
   await supaUpsert(state.profile,'totalSeconds', state.totalSeconds[state.profile]||0);
   await supaUpsert(state.profile,'dailySlotSeconds', state.dailySlotSeconds[state.profile]||{});
   await supaUpsert(state.profile,'notes', state.notes[state.profile]||{});
@@ -254,7 +290,7 @@ async function loadState(){
     if(p && p.value) state.profile = p.value;
   }catch(e){}
   await loadProfileScopedData(state.profile);
-  rebuildGSDays(state.subjectOrder[state.profile]);
+  rebuildGSDays(state.subjectOrder[state.profile], state.dayBudgets.gs[state.profile]);
   try{
     const d = await window.storage.get('currentDay');
     if(d && d.value) state.day = parseInt(d.value,10) || 1;
@@ -290,6 +326,13 @@ async function saveDayChoice(){
 async function saveOptChoice(){
   try{ await window.storage.set('optChoice:'+state.profile, JSON.stringify(state.optChoice[state.profile]||{})); }catch(e){}
   supaUpsert(state.profile,'optChoice', state.optChoice[state.profile]||{});
+}
+async function saveDayBudgets(){
+  try{ await window.storage.set('dayBudgetsGS:'+state.profile, JSON.stringify(state.dayBudgets.gs[state.profile]||{})); }catch(e){}
+  try{ await window.storage.set('dayBudgetOpt:'+state.profile, JSON.stringify(state.dayBudgets.opt[state.profile]||null)); }catch(e){}
+  optSeqCache[state.profile] = null;
+  supaUpsert(state.profile,'dayBudgetsGS', state.dayBudgets.gs[state.profile]||{});
+  supaUpsert(state.profile,'dayBudgetOpt', state.dayBudgets.opt[state.profile]||null);
 }
 async function persistTotalTime(){
   const secs = state.totalSeconds[state.profile]||0;
@@ -646,6 +689,12 @@ function render(){
   const dateObj = scheduledDate(day);
   ['gs','opt','aw','ca','rev'].forEach(initTimer);
 
+  const gsPYQs = recommendPYQs(effGS.subjectKey, effGS.topic, 2);
+  const optPYQs = recommendPYQs(state.profile, effOpt.topic, 2);
+  const pyqHtml = (items)=> items.length
+    ? items.map(p=>'<div class="topic" style="font-size:12.5px; margin-bottom:4px;">• '+esc(p.q)+'</div>').join('')
+    : '<div class="meta">No close match yet — pick any recent PYQ on this theme.</div>';
+
   const doneCount = [prog.gs, prog.opt, prog.aw, prog.rev, prog.ca].filter(Boolean).length;
   const totalSlots = 5;
   const overallPct = Math.round((day-1+ (doneCount/totalSlots)) / TOTAL_DAYS * 100);
@@ -701,9 +750,13 @@ function render(){
 
     <div class="grid">
       <div class="card" id="card-gs">
-        <span class="label">Subject 1 of 2 ${effGS.isOverride?'· your pick':'· planned'}</span>
+        <span class="label">Subject 1 of 2 ${effGS.isOverride?'· your pick':'· planned'}${effGS.topicDayTotal>1?' · Day '+effGS.topicDayIndex+'/'+effGS.topicDayTotal+' on this topic':''}</span>
         <h3>${effGS.subjectLabel}</h3>
         <div class="topic">${effGS.topic}</div>
+        <div class="pyq-box" style="background:var(--surface2); border-radius:8px; padding:8px;">
+          <div class="label" style="margin-bottom:4px;">Recommended PYQs to write on</div>
+          ${pyqHtml(gsPYQs)}
+        </div>
         <button class="ghost" style="align-self:flex-start; font-size:11px; padding:5px 9px;" data-action="toggleGSPicker">Change topic</button>
         <div id="gsPicker" style="display:none; background:var(--surface2); border-radius:8px; padding:8px; gap:6px; flex-direction:column;">
           <select id="gsPickerSubject" style="width:100%; padding:6px; border-radius:6px; background:var(--surface); color:var(--text); border:1px solid var(--line);">${buildSubjectOptions(effGS.subjectKey)}</select>
@@ -728,6 +781,10 @@ function render(){
         <span class="label">Subject 2 of 2 — Optional ${effOpt.isOverride?'· your pick':'· planned'}</span>
         <h3>${optionalLabel()}</h3>
         <div class="topic">${effOpt.topic}</div>
+        <div class="pyq-box" style="background:var(--surface2); border-radius:8px; padding:8px;">
+          <div class="label" style="margin-bottom:4px;">Recommended PYQs to write on</div>
+          ${pyqHtml(optPYQs)}
+        </div>
         <button class="ghost" style="align-self:flex-start; font-size:11px; padding:5px 9px;" data-action="toggleOptPicker">Change topic</button>
         <div id="optPicker" style="display:none; background:var(--surface2); border-radius:8px; padding:8px; gap:6px; flex-direction:column;">
           <select id="optPickerTopic" style="width:100%; padding:6px; border-radius:6px; background:var(--surface); color:var(--text); border:1px solid var(--line);">${buildOptTopicOptions(state.profile, effOpt.idx)}</select>
@@ -823,7 +880,7 @@ function attachHandlers(){
       await saveProfile();
       await loadProgress();
       await loadProfileScopedData(state.profile);
-      rebuildGSDays(state.subjectOrder[state.profile]);
+      rebuildGSDays(state.subjectOrder[state.profile], state.dayBudgets.gs[state.profile]);
       if(supaConfigured()){
         const remoteProgress = await supaFetch(state.profile,'progress');
         if(remoteProgress) state.progress[state.profile] = remoteProgress;
@@ -951,6 +1008,7 @@ function openSettings(){
         <div class="field"><label>Start date (Day 1)</label><input type="date" id="set-start" value="${state.settings.startDate||''}"></div>
         <button style="width:100%; margin-top:4px;" data-action="notifperm">Enable browser notifications (best-effort)</button>
         <button style="width:100%; margin-top:8px;" data-action="openReorder">Reorder subject sequence →</button>
+        <button style="width:100%; margin-top:8px;" data-action="openDayBudget">Study plan — day budgets →</button>
 
         <h2 style="margin-top:20px;">Cloud sync (Supabase)</h2>
         <div class="field"><label>Project URL</label><input type="text" id="set-supa-url" placeholder="https://xxxx.supabase.co" value="${state.sync.url}" style="width:170px;"></div>
@@ -971,6 +1029,7 @@ function openSettings(){
   document.querySelector('[data-action="closeModal"]').addEventListener('click', closeModal);
   document.querySelector('[data-action="notifperm"]').addEventListener('click', requestNotifPerm);
   document.querySelector('[data-action="openReorder"]').addEventListener('click', openReorderModal);
+  document.querySelector('[data-action="openDayBudget"]').addEventListener('click', openDayBudgetModal);
   document.querySelector('[data-action="syncNow"]').addEventListener('click', async ()=>{
     state.sync.url = document.getElementById('set-supa-url').value.trim();
     state.sync.key = document.getElementById('set-supa-key').value.trim();
@@ -1048,8 +1107,76 @@ function openReorderModal(){
     });
   });
   document.querySelector('[data-action="saveOrder"]').addEventListener('click', async ()=>{
-    rebuildGSDays(state.subjectOrder[state.profile]);
+    rebuildGSDays(state.subjectOrder[state.profile], state.dayBudgets.gs[state.profile]);
     await saveSubjectOrder();
+    closeModal();
+    render();
+  });
+}
+
+function openDayBudgetModal(){
+  const root = document.getElementById('modalRoot');
+  const profile = state.profile;
+  const profileLabel = profile==='psir' ? 'Amal · PSIR' : 'Arya · Malayalam';
+  const order = state.subjectOrder[profile];
+  const budgets = state.dayBudgets.gs[profile] || {};
+
+  const rows = order.map(key=>{
+    const subj = SUBJECTS[key];
+    const min = subj.topics.length;
+    const val = budgets[key] || min;
+    return `<div class="field" data-key="${key}">
+      <label>${esc(subj.label)} <span class="meta">(${min} topics, min ${min}d)</span></label>
+      <input type="number" min="${min}" data-budget-key="${key}" value="${val}" style="width:80px;">
+    </div>`;
+  }).join('');
+
+  const optTopics = profile==='psir' ? PSIR_TOPICS : MALAYALAM_TOPICS;
+  const optMin = optTopics.length;
+  const optVal = state.dayBudgets.opt[profile] || optMin;
+
+  root.innerHTML = `
+    <div class="overlay" id="overlay">
+      <div class="modal" style="max-width:480px;">
+        <h2>Study plan — day budgets — ${profileLabel}</h2>
+        <div class="note" style="margin-top:0; border-top:none; padding-top:0;">
+          Set a total number of days for each subject — the app splits those days across that subject's topics on its own, giving denser topics (the ones bundling several concepts together) more days and quick revision/PYQ-practice topics fewer. Minimum is one day per topic. Revision Rounds and the Test Series stay at their fixed length since they depend on content already covered.
+        </div>
+        ${rows}
+        <h2 style="margin-top:16px;">Optional — ${optionalLabel()}</h2>
+        <div class="field">
+          <label>Total days for the whole optional syllabus <span class="meta">(${optMin} topics, min ${optMin}d)</span></label>
+          <input type="number" min="${optMin}" id="budget-opt" value="${optVal}" style="width:80px;">
+        </div>
+        <div class="close-row">
+          <button class="ghost" data-action="resetBudgets">Reset to 1 day/topic</button>
+          <button class="ghost" data-action="backToSettings">Back</button>
+          <button class="primary" data-action="saveBudgets">Save &amp; rebuild plan</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
+  document.querySelector('[data-action="backToSettings"]').addEventListener('click', openSettings);
+  document.querySelector('[data-action="resetBudgets"]').addEventListener('click', async ()=>{
+    state.dayBudgets.gs[profile] = {};
+    state.dayBudgets.opt[profile] = null;
+    await saveDayBudgets();
+    rebuildGSDays(state.subjectOrder[profile], state.dayBudgets.gs[profile]);
+    openDayBudgetModal();
+  });
+  document.querySelector('[data-action="saveBudgets"]').addEventListener('click', async ()=>{
+    const newBudgets = {};
+    document.querySelectorAll('[data-budget-key]').forEach(inp=>{
+      const key = inp.getAttribute('data-budget-key');
+      const min = SUBJECTS[key].topics.length;
+      newBudgets[key] = Math.max(min, parseInt(inp.value,10) || min);
+    });
+    state.dayBudgets.gs[profile] = newBudgets;
+    const newOptVal = Math.max(optMin, parseInt(document.getElementById('budget-opt').value,10) || optMin);
+    state.dayBudgets.opt[profile] = (newOptVal===optMin) ? null : newOptVal;
+    await saveDayBudgets();
+    rebuildGSDays(state.subjectOrder[profile], state.dayBudgets.gs[profile]);
     closeModal();
     render();
   });

@@ -527,21 +527,81 @@ export const FINAL_PHASE_CYCLE = [
   "Rest & light revision — revisit only flagged/starred topics"
 ];
 
-/* Flatten GS days 1-220, then append the fixed final integrated phase (221-300) */
+export const TOTAL_DAYS = 300;
+export const OPTIONAL_DAYS = 80;
+
+/* ============== TOPIC WEIGHTING & DAY-BUDGET ALLOCATION ==============
+   Lets the person say "I want N days total for this subject/optional" and
+   have the app decide how those days split across its topics — denser
+   topics (ones bundling several concepts, judged from how many clauses
+   they pack in) get more days; quick revision/consolidation/PYQ-practice
+   topics get fewer. Falls back to exactly 1 day/topic when the budget
+   equals the topic count, which reproduces the original fixed schedule. */
+export function topicWeight(text){
+  let w = 1;
+  const lower = text.toLowerCase();
+  const seps = (text.match(/,|;| & | and |—/g) || []).length;
+  w += Math.min(seps * 0.28, 1.3);
+  if(/revision|consolidation|compilation|mock|pyq practice|practice test|practice set/.test(lower)) w *= 0.55;
+  if(/^full |comprehensive/.test(lower)) w *= 0.85;
+  return Math.max(0.5, Math.min(2.6, w));
+}
+
+/* Given a topic list and a total day budget (>= topics.length), returns:
+     seq  — array of topic indices, length === totalDays, in curriculum order,
+            with denser topics repeated across consecutive days
+     days — per-topic day count, same order as `topics`
+   Every topic gets at least 1 day; the remaining days are handed out by
+   weight using the largest-remainder method so the total always matches
+   exactly. */
+export function buildWeightedSequence(topics, totalDays){
+  const n = topics.length;
+  if(n===0) return {seq:[], days:[]};
+  totalDays = Math.max(n, Math.round(totalDays) || n);
+  const extraBudget = totalDays - n;
+  const weights = topics.map(topicWeight);
+  const W = weights.reduce((a,b)=>a+b,0) || n;
+  const rawExtra = weights.map(w => (w/W) * extraBudget);
+  const extraFloor = rawExtra.map(Math.floor);
+  const usedExtra = extraFloor.reduce((a,b)=>a+b,0);
+  let remainder = extraBudget - usedExtra;
+  const order = rawExtra.map((r,i)=>({i, frac: r - Math.floor(r)})).sort((a,b)=>b.frac-a.frac);
+  const extra = extraFloor.slice();
+  let k = 0;
+  while(remainder > 0 && order.length){
+    extra[order[k % order.length].i]++;
+    remainder--; k++;
+  }
+  const days = weights.map((_,i)=> 1 + extra[i]);
+  const seq = [];
+  topics.forEach((t,i)=>{ for(let d=0; d<days[i]; d++) seq.push(i); });
+  return {seq, days};
+}
+
+/* Flatten GS days, then append the fixed final integrated phase.
+   `dayBudgets` is an optional {subjectKey: totalDays} map — any subject not
+   listed defaults to its topic count (1 day/topic, the original behaviour). */
 export let GS_DAYS = [];
-export function rebuildGSDays(coreOrder){
+export function rebuildGSDays(coreOrder, dayBudgets){
+  dayBudgets = dayBudgets || {};
   GS_DAYS = [];
   coreOrder.concat(FIXED_TAIL).forEach(key=>{
     const subj = SUBJECTS[key];
-    subj.topics.forEach((topic, idx)=>{
+    const budget = dayBudgets[key] || subj.topics.length;
+    const {seq, days} = buildWeightedSequence(subj.topics, budget);
+    const seenSoFar = {};
+    seq.forEach(topicIdx=>{
+      seenSoFar[topicIdx] = (seenSoFar[topicIdx] || 0) + 1;
       GS_DAYS.push({
         day: GS_DAYS.length+1,
         subjectKey:key,
         subjectLabel: subj.label,
         color: subj.color,
-        topic: topic,
-        posInSubject: idx+1,
-        subjectTotal: subj.topics.length
+        topic: subj.topics[topicIdx],
+        posInSubject: topicIdx+1,
+        subjectTotal: subj.topics.length,
+        topicDayIndex: seenSoFar[topicIdx],
+        topicDayTotal: days[topicIdx]
       });
     });
   });
@@ -552,15 +612,20 @@ export function rebuildGSDays(coreOrder){
       if(c>0) topic += " — Round " + (c+1);
       GS_DAYS.push({
         day, subjectKey:"finalPhase", subjectLabel:"Final Integrated Phase", color:"#C9A227",
-        topic, posInSubject: c*20+i+1, subjectTotal:80
+        topic, posInSubject: c*20+i+1, subjectTotal:80, topicDayIndex:1, topicDayTotal:1
       });
     }
   }
+  /* Safety net: day-budgets can shrink or grow the plan's total length.
+     Downstream UI (spine ticks, week views) indexes GS_DAYS up through
+     TOTAL_DAYS, so pad with repeats of the last entry if a very tight
+     budget set left GS_DAYS shorter than that. */
+  while(GS_DAYS.length < TOTAL_DAYS){
+    const last = GS_DAYS[GS_DAYS.length-1];
+    GS_DAYS.push(Object.assign({}, last, {day: GS_DAYS.length+1}));
+  }
 }
 rebuildGSDays(CORE_ORDER_DEFAULT);
-
-export const TOTAL_DAYS = 300;
-export const OPTIONAL_DAYS = 80;
 
 /* Daily current-affairs theme rotation — a habit slot every single day, distinct from the
    periodic "Current Affairs Consolidation" phase which revises what's been noted here. */
@@ -569,5 +634,184 @@ export const CA_THEMES = ["Polity & Governance","Economy","International Relatio
 export function caTopicForDay(day){
   const theme = CA_THEMES[(day-1) % CA_THEMES.length];
   return "Read today's newspaper/CA source with a lens on " + theme + ". Note 3–5 Prelims/Mains-worthy points.";
+}
+
+/* ============== PYQ RECOMMENDATION BANK ==============
+   Curated, recurring UPSC Mains-style question themes (not verbatim quotes
+   from any specific year's paper) tagged with keywords, so a topic's text
+   can be matched against them and 1-2 relevant prompts surfaced for the
+   day's answer-writing slot. Cross-check exact years against the official
+   UPSC previous papers before relying on these for anything formal. */
+export const PYQ_BANK = {
+  polity: [
+    {q:"Discuss the doctrine of Basic Structure and its role in checking Parliament's amending power.", tags:["amendment","basic structure","constitution"]},
+    {q:"Examine the relationship between Fundamental Rights and Directive Principles, with reference to key case law.", tags:["fundamental rights","directive principles","dpsp"]},
+    {q:"'Cooperative federalism has increasingly given way to a more centralised structure.' Discuss with recent examples.", tags:["centre-state","federal","federalism"]},
+    {q:"Discuss the discretionary powers of the Governor and the controversies they have generated.", tags:["governor","state executive"]},
+    {q:"Evaluate the scope of judicial review and judicial activism in shaping Indian governance.", tags:["judicial review","judicial activism","supreme court"]},
+    {q:"Assess the effectiveness of Parliamentary Committees in ensuring executive accountability.", tags:["parliament","parliamentary committees","lok sabha","rajya sabha"]},
+    {q:"To what extent have Emergency provisions been used to alter India's federal balance?", tags:["emergency"]},
+    {q:"Discuss the role of the Election Commission in ensuring free and fair elections, and the case for electoral reform.", tags:["election commission","electoral reforms","political parties"]}
+  ],
+  geography: [
+    {q:"Explain the mechanism of the Indian monsoon and the influence of El Niño/La Niña on its variability.", tags:["climate","monsoon","atmosphere","winds"]},
+    {q:"Discuss the formation and characteristics of tropical cyclones in the Bay of Bengal and Arabian Sea.", tags:["cyclone","oceanography","ocean"]},
+    {q:"Examine the factors influencing the distribution of population in India.", tags:["population"]},
+    {q:"Discuss the causes and consequences of land degradation and soil erosion in India.", tags:["soil","vegetation","landform"]},
+    {q:"Analyse the locational factors governing the distribution of major industries.", tags:["economic geography","industry"]},
+    {q:"Discuss river-linking proposals in India and their ecological and geopolitical implications.", tags:["drainage","river"]}
+  ],
+  economy: [
+    {q:"Discuss the objectives of the FRBM Act and India's record on fiscal consolidation.", tags:["fiscal","public finance","budget","deficit"]},
+    {q:"Explain the transmission mechanism of monetary policy and the challenges the RBI faces in inflation targeting.", tags:["monetary policy","banking","rbi","inflation"]},
+    {q:"'MSP-based procurement has distorted cropping patterns in India.' Critically examine.", tags:["agriculture","msp","green revolution"]},
+    {q:"Discuss the rationale for GST and the challenges in its implementation.", tags:["taxation","gst","tax"]},
+    {q:"Examine the causes of a widening current account deficit and measures to correct it.", tags:["external sector","balance of payments","trade"]},
+    {q:"Discuss the case for and against further disinvestment of Public Sector Undertakings.", tags:["industry","disinvestment","psu"]},
+    {q:"Examine the adequacy of employment/unemployment measurement in India's informal-economy context.", tags:["employment","unemployment","poverty","services"]}
+  ],
+  modernHistory: [
+    {q:"Discuss the causes and nature of the Revolt of 1857 — was it a mutiny or a war of independence?", tags:["revolt of 1857","1857"]},
+    {q:"Examine Gandhi's technique of Satyagraha and its evolution through Champaran, Kheda and the mass movements.", tags:["gandhi","non-cooperation","civil disobedience","satyagraha"]},
+    {q:"Discuss the significance of the Swadeshi Movement in the evolution of Indian nationalism.", tags:["swadeshi","partition of bengal","extremist"]},
+    {q:"Assess the contribution of the Quit India Movement and the INA to India's independence.", tags:["quit india","ina","subhas bose"]},
+    {q:"Examine how constitutional reforms (1909-1935) shaped the demand for self-government.", tags:["government of india act","indian councils","round table"]},
+    {q:"Discuss the role of socio-religious reform movements in preparing the ground for Indian nationalism.", tags:["socio-religious","brahmo samaj","arya samaj"]}
+  ],
+  ancientHistory: [
+    {q:"Discuss the salient features of urban planning in the Indus Valley Civilization and theories on its decline.", tags:["indus valley"]},
+    {q:"Examine Ashoka's Dhamma and its role in Mauryan statecraft.", tags:["mauryan","ashoka"]},
+    {q:"Discuss why the Gupta period is regarded as a 'Golden Age' of ancient India.", tags:["gupta"]},
+    {q:"Examine the polity and society of the Sangam Age.", tags:["sangam"]}
+  ],
+  medievalHistory: [
+    {q:"Discuss the syncretic character of the Bhakti and Sufi movements and their social impact.", tags:["bhakti","sufi"]},
+    {q:"Examine the Mansabdari system and its role in Mughal administration.", tags:["mughal","administration"]},
+    {q:"Discuss the causes of conflict between Vijayanagara and the Bahmani Sultanate.", tags:["vijayanagara","bahmani"]},
+    {q:"Examine Akbar's religious policy, including the Din-i-Ilahi, and its political rationale.", tags:["akbar","babur","jahangir","aurangzeb"]}
+  ],
+  artCulture: [
+    {q:"Distinguish between the major classical dance forms of India in terms of theme and technique.", tags:["dance","classical dances"]},
+    {q:"Discuss the distinctive features of rock-cut architecture in India with examples.", tags:["architecture","sculpture"]},
+    {q:"Compare any two schools of Indian philosophy on the question of the self.", tags:["philosophy","religion"]},
+    {q:"Examine the significance of GI tags in preserving India's traditional crafts.", tags:["crafts","festivals"]}
+  ],
+  scienceTech: [
+    {q:"Discuss the significance of India's recent space missions for its strategic and scientific goals.", tags:["isro","space"]},
+    {q:"Examine the governance challenges posed by Artificial Intelligence and robotics.", tags:["ai","robotics","emerging technology"]},
+    {q:"Discuss the debate around GM crops in India, weighing benefits against biosafety concerns.", tags:["biotechnology","gm crops"]},
+    {q:"Examine the major cyber security challenges facing India and the adequacy of the current framework.", tags:["cyber security","it"]}
+  ],
+  environment: [
+    {q:"Discuss the significance of India's biodiversity hotspots and threats to them.", tags:["biodiversity","hotspots"]},
+    {q:"Examine the outcomes of major international climate agreements and India's commitments under them.", tags:["climate change","paris agreement","ipcc"]},
+    {q:"Discuss the limitations of the Environmental Impact Assessment process in India.", tags:["pollution","environmental policies"]},
+    {q:"Examine the challenges of human-wildlife conflict and invasive species in protected areas.", tags:["protected areas","species","wildlife"]}
+  ],
+  ethics: [
+    {q:"Case study: You face a conflict of interest between duty and personal loyalty — discuss the ethical dimensions and your course of action.", tags:["ethics basics","determinants","attitude"]},
+    {q:"Discuss the relevance of emotional intelligence to effective and empathetic public administration.", tags:["emotional intelligence"]},
+    {q:"Examine the concept of probity in governance and the key recommendations of major committees on it.", tags:["probity","accountability","transparency"]},
+    {q:"Distinguish between attitude and aptitude, and discuss their relevance to civil service conduct.", tags:["aptitude","foundational values"]}
+  ],
+  essay: [
+    {q:"Technology as a double-edged sword.", tags:["essay writing"]},
+    {q:"Women empowerment is the key to sustainable development.", tags:["social issues"]},
+    {q:"Development and environment: a false dichotomy?", tags:["economic","political"]}
+  ],
+  csat: [
+    {q:"Practice a timed comprehension + data-interpretation set, then review error patterns rather than just the score.", tags:["comprehension","data interpretation","reasoning"]}
+  ],
+  currentAffairs: [
+    {q:"Pick one scheme/report/index from this month's news and write a 150-word note linking it to its GS paper theme.", tags:["current affairs","schemes","reports"]}
+  ],
+  worldHistory: [
+    {q:"Examine the causes of the First World War and assess how far it can be attributed to the alliance system.", tags:["world war i"]},
+    {q:"Discuss the causes and consequences of the Russian Revolution for global politics.", tags:["russian revolution"]},
+    {q:"Examine the process of decolonization in Asia and Africa after the Second World War.", tags:["decolonization","world war ii","cold war"]}
+  ],
+  indianSociety: [
+    {q:"Discuss the impact of globalization on the Indian family and social structures.", tags:["globalization","indian society"]},
+    {q:"Examine the persistent challenges to women's safety and empowerment in India.", tags:["women","role of women"]},
+    {q:"Discuss the causes and consequences of unplanned urbanization in India.", tags:["urbanization"]}
+  ],
+  governance: [
+    {q:"Assess the effectiveness of e-governance initiatives in improving last-mile service delivery.", tags:["e-governance"]},
+    {q:"Discuss the role of NGOs and SHGs in India's development process, and the challenges they face.", tags:["ngo","shg","development processes"]},
+    {q:"Examine the impact of the RTI Act on transparency and accountability in governance.", tags:["rti","transparency","accountability"]}
+  ],
+  socialJustice: [
+    {q:"Discuss the structural challenges in India's public health infrastructure.", tags:["health"]},
+    {q:"Examine the objectives of the National Education Policy 2020 and the challenges in its implementation.", tags:["education"]},
+    {q:"Assess the effectiveness of welfare schemes targeting SC/ST/OBC and minority communities.", tags:["welfare schemes","sc/st/obc","minorities"]}
+  ],
+  internationalRelations: [
+    {q:"Discuss the key elements of India's 'Neighbourhood First' policy and the challenges to it.", tags:["neighborhood","neighbourhood"]},
+    {q:"Examine the trajectory of India-China relations, including the border dispute.", tags:["india-china","china"]},
+    {q:"Discuss the role of the Indian diaspora in advancing India's foreign policy and soft power.", tags:["diaspora"]},
+    {q:"Examine India's engagement with multilateral groupings such as G20, BRICS and the Quad.", tags:["g20","brics","quad","international institutions"]}
+  ],
+  internalSecurity: [
+    {q:"Examine the socio-economic roots of Left Wing Extremism and the effectiveness of counter-strategies.", tags:["left wing extremism","extremism"]},
+    {q:"Discuss the major cyber security threats to India's critical infrastructure and national security.", tags:["cyber security"]},
+    {q:"Examine the challenges of border management given the terrain and cross-border linkages of India's borders.", tags:["border areas","security forces"]},
+    {q:"Discuss the linkages between organized crime, money laundering and terror financing.", tags:["money laundering","organized crime"]}
+  ],
+  disasterManagement: [
+    {q:"Discuss the institutional framework for disaster management in India under the Disaster Management Act.", tags:["disaster management act","authorities"]},
+    {q:"Examine the role of the NDRF in recent major disasters, and gaps in response capacity.", tags:["ndrf","sdrf"]},
+    {q:"Discuss the importance of community-based approaches to disaster preparedness.", tags:["prevention","mitigation"]}
+  ],
+  psir: [
+    {q:"Critically examine Rawls's theory of justice and the major critiques of it by Nozick and communitarians.", tags:["rawls","justice","nozick"]},
+    {q:"Discuss the Marxist critique of the liberal theory of the state.", tags:["marxist","liberal","state"]},
+    {q:"Examine Gramsci's concept of hegemony and its relevance to understanding power in modern states.", tags:["hegemony","gramsci","power"]},
+    {q:"Compare Gandhi's and Ambedkar's approaches to social transformation in India.", tags:["gandhi","ambedkar"]},
+    {q:"Discuss the relevance of Kautilya's Arthashastra to contemporary statecraft.", tags:["kautilya","dharmashastra"]},
+    {q:"Examine Rousseau's concept of the General Will and its critique.", tags:["rousseau"]},
+    {q:"Discuss the debate between realism and liberalism in explaining international politics.", tags:["realist","idealist","neo-realism","neo-liberalism"]},
+    {q:"Examine the changing relevance of Non-Alignment in a multipolar world order.", tags:["non-alignment","nam","multipolarity"]},
+    {q:"Discuss the functioning of the United Nations Security Council and the case for its reform.", tags:["united nations","reform proposals"]},
+    {q:"Examine the trajectory and current state of India-Pakistan relations.", tags:["india-pakistan"]},
+    {q:"Discuss India's engagement with SAARC and the obstacles to South Asian regional cooperation.", tags:["saarc","regional cooperation"]},
+    {q:"Examine the determinants of India's foreign policy since independence.", tags:["indian foreign policy","determinants"]},
+    {q:"Discuss the debate on gender justice within feminist political theory.", tags:["feminism","gender justice"]},
+    {q:"Examine the impact of globalization on the nation-state's autonomy.", tags:["globalization","state under globalization"]}
+  ],
+  malayalam: [
+    {q:"Trace the evolution of Malayalam from Old Malayalam inscriptions through the Pattu and Manipravalam traditions.", tags:["pazhamalayalam","pattu","manipravalam"]},
+    {q:"Discuss Ezhuthachan's contribution to Malayalam literature and his place as 'Father of the Malayalam language'.", tags:["ezhuthachan"]},
+    {q:"Examine the impact of the Bhakti movement on Malayalam literature.", tags:["bhakti"]},
+    {q:"Discuss the significance of Thakazhi's Chemmeen as a work of social realism.", tags:["chemmeen","thakazhi"]},
+    {q:"Critically analyse O V Vijayan's Khasakkinte Itihasam as a landmark of Malayalam modernism.", tags:["khasakkinte","vijayan","modernism"]},
+    {q:"Discuss the contribution of Kumaran Asan's poetry to Malayalam's Romantic tradition.", tags:["asan","veena poovu","romantic"]},
+    {q:"Examine the role of the Progressive Literary Movement in shaping 20th-century Malayalam writing.", tags:["progressive literary movement","purogamana"]},
+    {q:"Discuss the emergence of Dalit and women's writing within Malayalam literature.", tags:["dalit literature","women writers"]},
+    {q:"Examine the contribution of Christian missionaries and print culture to the growth of Malayalam prose.", tags:["missionaries","print","journalism"]},
+    {q:"Discuss the major traditional and modern schools of Malayalam literary criticism.", tags:["literary criticism","kuttikrishna marar"]}
+  ]
+};
+
+/* Returns up to n recommended PYQ-style prompts for a given topic, matched
+   by keyword overlap against PYQ_BANK[bankKey]. Falls back to the bank's
+   first entries (still on-subject) if nothing scores above zero. */
+export function recommendPYQs(bankKey, topicText, n){
+  n = n || 2;
+  const bank = PYQ_BANK[bankKey];
+  if(!bank || !bank.length) return [];
+  const lower = (topicText||"").toLowerCase();
+  const words = lower.split(/[^a-z]+/).filter(w=>w.length>3);
+  const scored = bank.map(item=>{
+    let score = 0;
+    item.tags.forEach(tag=>{
+      const tagLower = tag.toLowerCase();
+      if(lower.includes(tagLower)) score += 2;
+      else if(tagLower.split(/\s+/).some(tw=>words.includes(tw))) score += 0.5;
+    });
+    return {q:item.q, score};
+  });
+  scored.sort((a,b)=>b.score-a.score);
+  const top = scored.filter(s=>s.score>0).slice(0,n);
+  return (top.length ? top : scored.slice(0,n)).map(s=>({q:s.q}));
 }
 
